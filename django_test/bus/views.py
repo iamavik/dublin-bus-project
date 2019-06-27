@@ -90,16 +90,104 @@ def findroutedetails(request):
 		
 		departure_stop ='%'+departure_stop+'%'
 		arrival_stop ='%'+arrival_stop+'%'
-		sql = """select ﻿stop_lat,stop_lon,STOP_ID_LAST_4,stop_name from mydbservlet.stops_2ttest_bus_stops where stop_name LIKE %s or stop_name LIKE %s""" 
+		sql = """select ﻿stop_lat,stop_lon,stop_id,STOP_ID_LAST_4,stop_name from mydbservlet.stops_2ttest_bus_stops where stop_name LIKE %s or stop_name LIKE %s""" 
 		db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
 		cursor = db.cursor()
 		cursor.execute(sql,(departure_stop,arrival_stop,))
 		result = cursor.fetchall()
-		result = json.dumps(result)
-		args={}
-		args['result']=result
-		print(result)
 		
+		#result = json.dumps(result)
+		
+		result = list(result)
+		print(result)
+		print("Length of result is",len(result))
+		#Code added on 23-06
+		if(len(result)>2):
+			new_result = [0]*2
+			for data in result:
+				print("Data is",data)
+				stop_id_check = data[2]
+				sql_3 = """ select distinct mydbservlet.stops_times.bus_number  from mydbservlet.stops_times 
+						where mydbservlet.stops_times.bus_number=%s
+						and mydbservlet.stops_times.bus_stop_number=%s"""
+				db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
+				cursor = db.cursor()
+				cursor.execute(sql_3,(bus_number,stop_id_check,))
+				query_result = cursor.fetchall()
+				print("Query_result is",query_result)
+				if(len(query_result)!=0):
+					new_result.append(data)
+					new_result = list(filter(lambda a: a != 0, new_result))
+			print("New result is ",new_result)
+			result = new_result
+
+		
+		arrival_stop_id = result[0][2]
+		departure_stop_id = result[1][2]
+		number_of_stops = int(number_of_stops)
+		print("Bus Number is",bus_number)
+		
+		args={}
+		result = json.dumps(result)
+		args['result']=result
+
+		
+		#23-06 Adding Code
+		
+		sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign from mydbservlet.stops_times,
+				mydbservlet.trips_info_bus_number where stops_times.trip_id = trips_info_bus_number.trip_id and stops_times.headsign=%s
+				and stops_times.bus_number = %s and (bus_stop_number=%s or bus_stop_number=%s)"""
+		cursor = db.cursor()
+		cursor.execute(sql_2,(headsign,bus_number,arrival_stop_id,departure_stop_id,))
+		seq_numbers = cursor.fetchall()
+		print(seq_numbers)
+		seq_numbers = list(seq_numbers)
+		print("length of sequence numbers is",len(seq_numbers))
+		if(len(seq_numbers)>2):
+			departure_bus_seq = seq_numbers[0][1]
+			arrival_bus_seq = seq_numbers[1][1]
+			headsign_seq = seq_numbers[0][3]
+			print("departure_bus_seq",departure_bus_seq)
+			print("arrival_bus_seq",arrival_bus_seq)
+			print("headsign",headsign_seq)
+
+
+		else:
+			departure_bus_seq = seq_numbers[0][1]
+			arrival_bus_seq = seq_numbers[1][1]
+			headsign_seq = seq_numbers[0][3]
+			print("departure_bus_seq",departure_bus_seq)
+			print("arrival_bus_seq",arrival_bus_seq)
+			print("headsign",headsign_seq)
+		
+
+		sql_intermed_bus_stops = """select distinct mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,
+								mydbservlet.stops_2ttest_bus_stops.﻿stop_lat,
+								mydbservlet.stops_2ttest_bus_stops.stop_lon,mydbservlet.stops_2ttest_bus_stops.stop_name from mydbservlet.stops_2ttest_bus_stops,
+								mydbservlet.stops_times where mydbservlet.stops_2ttest_bus_stops.stop_id = mydbservlet.stops_times.bus_stop_number and  stops_times.bus_number=%s 
+								and stops_times.headsign = %s and stops_times.stop_sequence between %s and %s """
+
+		cursor = db.cursor()
+		cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,))
+		intermediate_bus_stops = cursor.fetchall()
+		print("intermediate bus stops",intermediate_bus_stops)
+		seen = set()
+		seen_add = seen.add
+		remove_duplicates = [x for x in intermediate_bus_stops if not (x[0] in seen or seen_add(x[0]))]
+		print("Length of intermediate_bus_stops",len(intermediate_bus_stops))
+		print("Length of intermediate_bus_stops remove duplicates",len(remove_duplicates))
+		print(remove_duplicates)
+		'''
+
+		seq_numbers = list(seq_numbers)
+		if(len(seq_numbers)>2):
+			selected_seq_numbers = [0]*2
+			i = 0
+			if(i<len(seq_numbers) and seq_numbers[i]!=seq_numbers[i+1]):
+
+
+		'''
+	
 		return HttpResponse(json.dumps({'result': result, 'list_with_direction': list_with_direction}))
 	else:
 		return HttpResponse("Error")
@@ -118,7 +206,7 @@ def getweatherdetails(request):
 	weather_data = r.json() 
 	#print(weather_data.weather[0].main)
 	#print(weather_data.main.temp)
-	print(weather_data)
+	#print(weather_data)
 	return HttpResponse(json.dumps({'weather_data': weather_data}))
 
 
@@ -136,5 +224,8 @@ def search(request):
 '''
 #args = {}   args['result'] = result
     
+
+
+
 
 
