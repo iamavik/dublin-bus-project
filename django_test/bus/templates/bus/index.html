@@ -18,7 +18,8 @@
     -->  
 Source: <input id="searchTextField" type="text" size="50" placeholder="Enter starting point" autocomplete="on" runat="server" onclick="initialize()"/> 
 Destination: <input id="searchTextField2" type="text" size="50" placeholder="Enter ending point" autocomplete="on" runat="server" onclick="initialize2()" />
-<input type="submit" name="Submit" value="Submit" onclick="return test_func();"/>
+<input type="submit" name="Submit" value="Go Now" onclick="return test_func();"/>
+<input type="submit" name="Submit2" value="Plan Your Trip" />
 		<p>Total Distance to destination<p id="demo1"></p></p>
         <p><b> Directions to the closest Departure Bus Stop      </b></p>
         
@@ -247,8 +248,8 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
 
       function calculateAndDisplayRoute(directionsService, directionsDisplay,myObj) {
         var selectedMode = "TRANSIT";
-        var origin_stop_name = myObj[0][3];  
-         var dest_stop_name = myObj[1][3];  
+        var origin_stop_name = myObj[0][4];  
+         var dest_stop_name = myObj[1][4];  
          
           var source = document.getElementById("searchTextField").value;
           var dest  = document.getElementById("searchTextField2").value;
