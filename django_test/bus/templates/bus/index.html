@@ -248,8 +248,8 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
 
       function calculateAndDisplayRoute(directionsService, directionsDisplay,myObj) {
         var selectedMode = "TRANSIT";
-        var origin_stop_name = myObj[0][4];  
-         var dest_stop_name = myObj[1][4];  
+      //  var origin_stop_name = myObj[0][4];  
+      //   var dest_stop_name = myObj[1][4];  
          
           var source = document.getElementById("searchTextField").value;
           var dest  = document.getElementById("searchTextField2").value;
@@ -277,20 +277,20 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
 
       function display_direction_data(direction_data)
       {
-      	document.getElementById("demo1").innerHTML = direction_data[1];
-      	document.getElementById("demo2").innerHTML = direction_data[2];
-      	document.getElementById("demo3").innerHTML = direction_data[3];
-      	document.getElementById("demo4").innerHTML = direction_data[4];
-      	document.getElementById("demo5").innerHTML = direction_data[6];
-      	document.getElementById("demo6").innerHTML = direction_data[8]
-      	document.getElementById("demo7").innerHTML = direction_data[9];
-      	document.getElementById("demo8").innerHTML = direction_data[10];
-      	document.getElementById("demo9").innerHTML = direction_data[11];
-      	document.getElementById("demo10").innerHTML = direction_data[12];
-      	document.getElementById("demo11").innerHTML = direction_data[13];
+      	document.getElementById("demo1").innerHTML = direction_data[0][1];
+      	document.getElementById("demo2").innerHTML = direction_data[0][2];
+      	document.getElementById("demo3").innerHTML = direction_data[0][3];
+      	document.getElementById("demo4").innerHTML = direction_data[0][4];
+      	document.getElementById("demo5").innerHTML = direction_data[0][6];
+      	document.getElementById("demo6").innerHTML = direction_data[0][8]
+      	document.getElementById("demo7").innerHTML = direction_data[0][9];
+      	document.getElementById("demo8").innerHTML = direction_data[0][10];
+      	document.getElementById("demo9").innerHTML = direction_data[0][11];
+      	document.getElementById("demo10").innerHTML = direction_data[0][12];
+      	document.getElementById("demo11").innerHTML = direction_data[0][13];
       	//document.getElementById("demo12").innerHTML = direction_data[14];
-      	document.getElementById("demo13").innerHTML = direction_data[15];
-      	document.getElementById("demo14").innerHTML = direction_data[16];
+      	document.getElementById("demo13").innerHTML = direction_data[0][15];
+      	document.getElementById("demo14").innerHTML = direction_data[0][16];
 
 
 
@@ -357,8 +357,9 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
                		//document.getElementById("demo5").innerHTML=myObj.result;
                		var result_data = JSON.parse(myObj.result);
                		//document.getElementById("demo6").innerHTML= result_data[0];
-               		var direction_data = myObj.list_with_direction;
+               		var direction_data = myObj.list_with_alternate_routes;
                		//document.getElementById("demo1").innerHTML = direction_data[0];
+               		console.log(direction_data);
 
                		change_map(result_data);
                		display_direction_data(direction_data);
