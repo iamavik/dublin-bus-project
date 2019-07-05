@@ -69,15 +69,39 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 					new_result = list(filter(lambda a: a != 0, new_result))
 			print("New result is ",new_result)
 			result = new_result
+			list_bus_stop_names_filtered = []
+			for j in result:
+				list_bus_stop_names_filtered.append(j[4])
+			print("List of bus stop names",list_bus_stop_names_filtered)
 
 		i = 0
 		while(True):
-			if(result[i][4]!=result[i+1][4]):
+			if(len(result)==2):
 				arrival_stop_id = result[i][2]
 				departure_stop_id = result[i+1][2]
 				break
-			else:
-				i+=1
+
+			else: #The extra checks are added to handle problems with new result like for bus line 142 where New result is  [(53.3052537916, -6.24403759177, '8250DB003012', 3012, 'Clonskeagh, Bird Avenue (Dundrum Road)'), (53.3054851145, -6.24570873358, '8250DB002819', 2819, 'Dundrum Road'), (53.3082021061, -6.23006545661, '8250DB000877', 877, 'Belfield, University College of Dublin UCD')] and 3012 and 877 are correct
+				arrival_stop = arrival_stop.replace('%','')
+				print("arrival stop after removing %",arrival_stop)
+				if(arrival_stop in list_bus_stop_names_filtered):
+					index_arrival_stop = list_bus_stop_names_filtered.index(arrival_stop)
+					print("index",index_arrival_stop)
+					if(result[i][2]!=result[index_arrival_stop][2]):
+						arrival_stop_id = result[i][2]
+						departure_stop_id = result[index_arrival_stop][2]
+						break
+					else:
+						i+=1
+				else:
+					if(result[i][4]!=result[i+1][4]):
+						arrival_stop_id = result[i][2]
+						departure_stop_id = result[i+1][2]
+						break
+					else:
+						i+=1
+		print("arrival_stop_id",arrival_stop_id)
+		print("departure_stop_id",departure_stop_id)
 		list_arrive_depart_stop_id=[]
 		list_arrive_depart_stop_id.append(arrival_stop_id)
 		list_arrive_depart_stop_id.append(departure_stop_id)
@@ -93,9 +117,10 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops):
 	#23-06 Adding Code
 			
-	sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign from mydbservlet.stops_times,
+	sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign,mydbservlet.stops_times.bus_number,
+		mydbservlet.stops_times.trip_id from mydbservlet.stops_times,
 		mydbservlet.trips_info_bus_number where stops_times.trip_id = trips_info_bus_number.trip_id and stops_times.headsign=%s
-		and stops_times.bus_number = %s and (bus_stop_number=%s or bus_stop_number=%s)"""
+		and stops_times.bus_number = %s and (bus_stop_number=%s or bus_stop_number=%s) """
 	db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
 	cursor = db.cursor()
 	cursor.execute(sql_2,(headsign,bus_number,arrival_stop_id,departure_stop_id,))
@@ -110,18 +135,24 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 				departure_bus_seq = seq_numbers[i][1]
 				arrival_bus_seq = seq_numbers[i+1][1]
 				headsign_seq = seq_numbers[i][3]
+				direction_id = seq_numbers[i][2]
+				trip_id = seq_numbers[i][5]
 				print("departure_bus_seq",departure_bus_seq)
 				print("arrival_bus_seq",arrival_bus_seq)
 				print("headsign",headsign_seq)
+				print("trip id", trip_id)
 				break
 			else:
 				departure_bus_seq = seq_numbers[0][1]
 				arrival_bus_seq = seq_numbers[1][1]
 				headsign_seq = seq_numbers[0][3]
+				direction_id = seq_numbers[0][2]
+				trip_id = seq_numbers[0][5]
 				print("inside while-else")
 				print("departure_bus_seq",departure_bus_seq)
 				print("arrival_bus_seq",arrival_bus_seq)
 				print("headsign",headsign_seq)
+				print("trip id", trip_id)
 				i+=1
 
 
@@ -129,9 +160,12 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 		departure_bus_seq = seq_numbers[0][1]
 		arrival_bus_seq = seq_numbers[1][1]
 		headsign_seq = seq_numbers[0][3]
+		direction_id = seq_numbers[0][2]
+		trip_id = seq_numbers[0][5]
 		print("departure_bus_seq",departure_bus_seq)
 		print("arrival_bus_seq",arrival_bus_seq)
 		print("headsign",headsign_seq)
+		print("trip id", trip_id)
 
 	if(departure_bus_seq>arrival_bus_seq):
 		exchange = departure_bus_seq
@@ -140,18 +174,21 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 
 	sql_intermed_bus_stops = """select distinct mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,
 						mydbservlet.stops_2ttest_bus_stops.﻿stop_lat,
-						mydbservlet.stops_2ttest_bus_stops.stop_lon,mydbservlet.stops_2ttest_bus_stops.stop_name from mydbservlet.stops_2ttest_bus_stops,
-						mydbservlet.stops_times where mydbservlet.stops_2ttest_bus_stops.stop_id = mydbservlet.stops_times.bus_stop_number and  stops_times.bus_number=%s 
-						and stops_times.headsign = %s and stops_times.stop_sequence between %s and %s """
+						mydbservlet.stops_2ttest_bus_stops.stop_lon,mydbservlet.stops_2ttest_bus_stops.stop_name,mydbservlet.stops_times.bus_number from mydbservlet.stops_2ttest_bus_stops,
+						mydbservlet.stops_times,mydbservlet.trips_info_bus_number where mydbservlet.stops_2ttest_bus_stops.stop_id = mydbservlet.stops_times.bus_stop_number and stops_times.trip_id = trips_info_bus_number.trip_id and  stops_times.bus_number=%s 
+						and stops_times.headsign = %s and stops_times.stop_sequence between %s and %s and trips_info_bus_number.direction_id=%s and mydbservlet.stops_times.trip_id=%s  order by mydbservlet.stops_times.stop_sequence"""
 
 	cursor = db.cursor()
-	cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,))
+	#cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,))
+	cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,int(direction_id),trip_id,))
 	intermediate_bus_stops = cursor.fetchall()
 	print("intermediate bus stops",intermediate_bus_stops)
 	seen = set()
 	seen_add = seen.add
-	remove_duplicates = [x for x in intermediate_bus_stops if not (x[1] in seen or seen_add(x[1]))]
+	remove_duplicates = [x for x in intermediate_bus_stops if not (x[0] in seen or seen_add(x[0]))]
+
 	print("Length of intermediate_bus_stops",len(intermediate_bus_stops))
+	remove_duplicates = [x for x in remove_duplicates if not (x[1] in seen or seen_add(x[1]))]
 	print("Length of intermediate_bus_stops remove duplicates",len(remove_duplicates))
 	
 	print("List of sequence bus stops after removing duplicates",remove_duplicates)
@@ -282,13 +319,14 @@ def findroutedetails(request):
 
 				list_with_direction = [total_duration, total_time,html_inst1,dist_bus_stop_walk,time_to_bus_stop_walk,html_inst2,bus_distance,bus_time,departure_stop,bus_at_departure_stop,headsign,bus_number,number_of_stops,arrival_stop,html_inst3,distance_to_dest,time_by_walk_dest]
 				list_with_alternate_routes.append(list_with_direction)
-
+				print("Bus number is",bus_number)
 				if(i['legs'][0]['steps'][1]['transit_details']['line']['short_name'].upper() in list(map(itemgetter(0),list_all_bus_numbers))):
 
 					departure_stop ='%'+departure_stop+'%'
 					arrival_stop ='%'+arrival_stop+'%'
 
 					list_arrive_depart_stop_id=extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign)
+					print("Return of extract_correct_depart_arrival_stop_id",list_arrive_depart_stop_id)
 					arrival_stop_id = list_arrive_depart_stop_id[0]
 					departure_stop_id = list_arrive_depart_stop_id[1]
 					result = list_arrive_depart_stop_id[2]
@@ -304,7 +342,7 @@ def findroutedetails(request):
 				else:
 					pass
 
-			else:
+			elif(len(i['legs'][0]['steps'])==4 or len(i['legs'][0]['steps'])==5 ):
 				
 				print("Routes from google apis",i)
 				list_with_direction = get_transit_details(i)
@@ -387,7 +425,7 @@ def findroutedetails(request):
 		result = json.dumps(result)
 		args['result']=result
 	
-		return HttpResponse(json.dumps({'result': result, 'list_with_alternate_routes': list_with_alternate_routes}))
+		return HttpResponse(json.dumps({'result': result, 'list_with_alternate_routes': list_with_alternate_routes,'list_intermediate_bus_stops_alternate_stops':list_intermediate_bus_stops_alternate_stops}))
 	else:
 		return HttpResponse("Error")
 
@@ -425,7 +463,5 @@ def search(request):
 '''
 #args = {}   args['result'] = result
     
-
-
 
 
