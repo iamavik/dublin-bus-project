@@ -1,1 +1,22 @@
 Folder for weather data
+
+DS_hourly_data - All data for hourly call
+
+DS_key_data - Important data formated into a normal CSV for processing
+
+full_weather_DS - All data taken from Dark Skies API, including hourly, daily and currently
+
+hly175 - Met Eireann Data download
+
+To generate table in mydbservlet in MySQL workbench
+  1. Import as usual into MySQL workbench
+  2. Run the following quieries to see if uploaded correctly and covert Unix time to standard
+
+---------
+
+select * from mydbservlet.DS_key_data;
+
+update mydbservlet.ds_key_data
+set mydbservlet.ds_key_data.hourly_data_time = from_unixtime(mydbservlet.ds_key_data.hourly_data_time, '%Y-%m-%d %T');
+
+---------
