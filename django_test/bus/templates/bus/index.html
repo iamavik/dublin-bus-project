@@ -207,7 +207,7 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
                     maxWidth: 355
                     });    
             }
-               function change_map(myObj) {
+               function change_map(myObj,list_intermediate_bus_stops) {
        			var directionsDisplay = new google.maps.DirectionsRenderer;
         		var directionsService = new google.maps.DirectionsService;
 
@@ -218,9 +218,58 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
                 infowindow = new google.maps.InfoWindow({  
                     maxWidth: 355
                     }); 
+                directionsDisplay.setMap(map);
+                
+                //google.maps.SymbolPath.CIRCLE
+                //google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+                var whiteCircle = {
+    path: google.maps.SymbolPath.CIRCLE,
+    fillOpacity: 1.0,
+    fillColor: "black",
+    strokeOpacity: 1.0,
+    strokeColor: "white",
+    strokeWeight: 1.0,
+    scale: 3.5
+};
+                
+		for(var i = 0;i<1;i++)
+		{
+			for(var j =0;j<list_intermediate_bus_stops[i].length;j++)
+			{
+						var myLatlng = new google.maps.LatLng(list_intermediate_bus_stops[i][j][2],list_intermediate_bus_stops[i][j][3]);
+						var marker = new google.maps.Marker({
+    					position: myLatlng,
+    					icon: whiteCircle,
+    					stop_no: list_intermediate_bus_stops[i][j][0],
+    					stop_name: list_intermediate_bus_stops[i][j][4]
+            
+          
+   						 
+});
+					
+// To add the marker to the map, call setMap();
+marker.setMap(map);
+popupDirections(marker);
+
+
+			}
+	
+		}
+
+	
+            function popupDirections(marker) {
+            
+                //This function created listener listens for click on a marker to show information specific to that marker
+                google.maps.event.addListener(marker, 'click', function () {
+                infowindow.setContent('<b>'+"Stop No:"+'</b>'+marker.stop_no+'<br>'+'<b>'+"Stop Name:"+'</b>'+marker.stop_name);  infowindow.open(map, marker); //This opens the infowindow at the marker
+                });
+            }
+
+
+
 
         
-        directionsDisplay.setMap(map);
+        
 
         calculateAndDisplayRoute(directionsService, directionsDisplay,myObj);
        
@@ -359,9 +408,11 @@ Destination: <input id="searchTextField2" type="text" size="50" placeholder="Ent
                		//document.getElementById("demo6").innerHTML= result_data[0];
                		var direction_data = myObj.list_with_alternate_routes;
                		//document.getElementById("demo1").innerHTML = direction_data[0];
+               		var list_intermediate_bus_stops = myObj.list_intermediate_bus_stops_alternate_stops;
                		console.log(direction_data);
+               		console.log(list_intermediate_bus_stops);
 
-               		change_map(result_data);
+               		change_map(result_data,list_intermediate_bus_stops);
                		display_direction_data(direction_data);
 
 
