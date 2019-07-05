@@ -1,0 +1,6 @@
+500 Server Error: Internal Server Error for url: https://api.darksky.net/forecast/9f1958ebccc13a47f71938ecdaed369a/37.8267,-122.4233
+500 Server Error: Internal Server Error for url: https://api.darksky.net/forecast/9f1958ebccc13a47f71938ecdaed369a/37.8267,-122.4233
+500 Server Error: Internal Server Error for url: https://api.darksky.net/forecast/9f1958ebccc13a47f71938ecdaed369a/37.8267,-122.4233
+500 Server Error: Internal Server Error for url: https://api.darksky.net/forecast/9f1958ebccc13a47f71938ecdaed369a/37.8267,-122.4233
+Invalid URL 'h': No schema supplied. Perhaps you meant http://h?
+Invalid URL 'h': No schema supplied. Perhaps you meant http://h?
