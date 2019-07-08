@@ -2,6 +2,12 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import pymysql,json
 from operator import itemgetter
+import joblib
+#import pickle
+import _pickle as cPickle
+import os
+CURRENT_DIR = os.path.dirname(__file__)
+model_file = os.path.join(CURRENT_DIR, 'prediction_46A_cPickle.pickle')
 
 def home(request):
 	'''
@@ -114,7 +120,7 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 
 
 
-def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops):
+def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop):
 	#23-06 Adding Code
 			
 	sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign,mydbservlet.stops_times.bus_number,
@@ -182,6 +188,7 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 	#cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,))
 	cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,int(direction_id),trip_id,))
 	intermediate_bus_stops = cursor.fetchall()
+
 	print("intermediate bus stops",intermediate_bus_stops)
 	seen = set()
 	seen_add = seen.add
@@ -192,6 +199,10 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 	print("Length of intermediate_bus_stops remove duplicates",len(remove_duplicates))
 	
 	print("List of sequence bus stops after removing duplicates",remove_duplicates)
+
+	if(bus_number=="46a"):
+		print("Now calling machine learning model..testing only for 46A")
+		test_ml_model_46A(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop)
 
 	return(remove_duplicates)
 
@@ -239,6 +250,62 @@ def get_transit_details(transit_route):
 
 	return list_with_direction
 
+
+def test_ml_model_46A(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop):
+	import gc
+	#import time,datetime
+	extract_dept_stop_id = int(departure_stop_id[-4:])
+	print("Extracted departure stop id is",extract_dept_stop_id)
+	extract_arr_stop_id = int(arrival_stop_id[-4:])
+	print("Extracted arrival stop id is",extract_arr_stop_id)
+	'''
+	z = str(datetime.datetime.now())
+	hr_in_sec = int(z[11:13])*3600
+	mins_sec = int(z[14:16])*60
+	time_secs = hr_in_sec+mins_sec
+
+	'''
+	print("Bus at depart stop",bus_at_departure_stop)
+	print("Bus at arrival stop", bus_at_arrival_stop)
+	a = bus_at_departure_stop[-2:]
+	if(a=='am'):
+		bus_at_departure_stop = bus_at_departure_stop[:-2]
+		bus_at_departure_stop = bus_at_departure_stop.split(':')
+		hr_in_sec_1 = int(bus_at_departure_stop[0])*3600
+		mins_sec_1 = int(bus_at_departure_stop[1])*60
+		time_secs_1 = hr_in_sec_1+mins_sec_1
+	else:
+		bus_at_departure_stop = bus_at_departure_stop[:-2]
+		bus_at_departure_stop = bus_at_departure_stop.split(':')
+		hr_in_sec_1 = (int(bus_at_departure_stop[0])+12)*3600
+		mins_sec_1 = int(bus_at_departure_stop[1])*60
+		time_secs_1 = hr_in_sec_1+mins_sec_1
+
+	print("Time in seconds1",time_secs_1)
+	a = bus_at_arrival_stop[-2:]
+	if(a=='am'):
+		bus_at_arrival_stop = bus_at_arrival_stop[:-2]
+		bus_at_arrival_stop = bus_at_arrival_stop.split(':')
+		hr_in_sec_2 = int(bus_at_arrival_stop[0])*3600
+		mins_sec_2 = int(bus_at_arrival_stop[1])*60
+		time_secs_2 = hr_in_sec_2+mins_sec_2
+	else:
+		bus_at_arrival_stop = bus_at_arrival_stop[:-2]
+		bus_at_arrival_stop = bus_at_arrival_stop.split(':')
+		hr_in_sec_2 = (int(bus_at_arrival_stop[0])+12)*3600
+		mins_sec_2 = int(bus_at_arrival_stop[1])*60
+		time_secs_2 = hr_in_sec_2+mins_sec_2
+
+	print("Time in seconds2",time_secs_2)
+	request_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,1,0,0,0,0,0]]
+	gc.disable()
+	model = cPickle.load(open(model_file,'rb'))
+	gc.enable()
+	predicted_arrival_time_1 = int(model.predict(request_model))
+	print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
+	request_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,1,0,0,0,0,0]]
+	predicted_arrival_time_2 = int(model.predict(request_model))
+	print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 
@@ -316,6 +383,8 @@ def findroutedetails(request):
 				html_inst3 = i['legs'][0]['steps'][2]['html_instructions']
 				distance_to_dest = i['legs'][0]['steps'][2]['distance']['text']
 				time_by_walk_dest = i['legs'][0]['steps'][2]['duration']['text']
+				#bus_at_arrival_stop newly added
+				bus_at_arrival_stop = i['legs'][0]['steps'][1]['transit_details']['arrival_time']['text']
 
 				list_with_direction = [total_duration, total_time,html_inst1,dist_bus_stop_walk,time_to_bus_stop_walk,html_inst2,bus_distance,bus_time,departure_stop,bus_at_departure_stop,headsign,bus_number,number_of_stops,arrival_stop,html_inst3,distance_to_dest,time_by_walk_dest]
 				list_with_alternate_routes.append(list_with_direction)
@@ -327,18 +396,18 @@ def findroutedetails(request):
 
 					list_arrive_depart_stop_id=extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign)
 					print("Return of extract_correct_depart_arrival_stop_id",list_arrive_depart_stop_id)
-					arrival_stop_id = list_arrive_depart_stop_id[0]
-					departure_stop_id = list_arrive_depart_stop_id[1]
-					result = list_arrive_depart_stop_id[2]
-
-									
-					
-					number_of_stops = int(number_of_stops)
-					print("Bus Number is",bus_number)
-					remove_duplicates = extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops)
-					
-					list_intermediate_bus_stops_alternate_stops.append(remove_duplicates)
-					print("-----------------------------------------------------------------------------------------")
+					if(list_arrive_depart_stop_id!=0):
+						arrival_stop_id = list_arrive_depart_stop_id[0]
+						departure_stop_id = list_arrive_depart_stop_id[1]
+						result = list_arrive_depart_stop_id[2]
+						number_of_stops = int(number_of_stops)
+						print("Bus Number is",bus_number)
+						remove_duplicates = extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop)
+						
+						list_intermediate_bus_stops_alternate_stops.append(remove_duplicates)
+						print("-----------------------------------------------------------------------------------------")
+					else: #This else is doing error handling if list_arrive_depart_stop_id returns 0 in case of a database failure
+						pass
 				else:
 					pass
 
