@@ -2,12 +2,15 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import pymysql,json
 from operator import itemgetter
+from . import machine_learning_tester  
+from .machine_learning_tester import ml_model
+#from .machine_learning_tester.py import *
 import joblib
 #import pickle
 import _pickle as cPickle
 import os
 CURRENT_DIR = os.path.dirname(__file__)
-model_file = os.path.join(CURRENT_DIR, 'prediction_46A_cPickle.pickle')
+#model_file = os.path.join(CURRENT_DIR, 'prediction_46A_cPickle.pickle')
 
 def home(request):
 	'''
@@ -159,7 +162,7 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 
 
 
-def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops):#,bus_at_departure_stop,bus_at_arrival_stop):
+def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop,departure_date):
 	#23-06 Adding Code
 			
 	sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign,mydbservlet.stops_times.bus_number,
@@ -238,6 +241,8 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 	print("Length of intermediate_bus_stops remove duplicates",len(remove_duplicates))
 	
 	print("List of sequence bus stops after removing duplicates",remove_duplicates)
+
+	ml_model(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
 	'''
 	if(bus_number=="46a"):
 		print("Now calling machine learning model..testing only for 46A")
@@ -256,6 +261,7 @@ def get_transit_details(transit_route):
 		#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 		number_of_stops_first = transit_route['legs'][0]['steps'][1]['transit_details']['num_stops']
 		arrival_stop_transit = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
+		bus_at_intermediate_transfer_stop = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_time']['text']
 		transit = "Transfer"
 		if(transit_route['legs'][0]['steps'][2]["travel_mode"]=="TRANSIT"):
 			departure_stop_transit = transit_route['legs'][0]['steps'][2]['transit_details']['departure_stop']['name']
@@ -266,7 +272,7 @@ def get_transit_details(transit_route):
 			number_of_stops_second = transit_route['legs'][0]['steps'][2]['transit_details']['num_stops']
 			arrival_stop_final = transit_route['legs'][0]['steps'][2]['transit_details']['arrival_stop']['name']
 			bus_at_final_destination_stop = transit_route['legs'][0]['steps'][2]['transit_details']['arrival_time']['text'];
-			list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop]
+			list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop,bus_at_intermediate_transfer_stop]
 		else:
 			departure_stop_transit = transit_route['legs'][0]['steps'][3]['transit_details']['departure_stop']['name']
 			bus_at_transit_departure_stop = transit_route['legs'][0]['steps'][3]['transit_details']['departure_time']['text']
@@ -276,7 +282,7 @@ def get_transit_details(transit_route):
 			number_of_stops_second = transit_route['legs'][0]['steps'][3]['transit_details']['num_stops']
 			arrival_stop_final = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_stop']['name']
 			bus_at_final_destination_stop = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_time']['text'];
-			list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop]
+			list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop,bus_at_intermediate_transfer_stop]
 
 		
 
@@ -289,6 +295,7 @@ def get_transit_details(transit_route):
 		#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 		number_of_stops_first = transit_route['legs'][0]['steps'][1]['transit_details']['num_stops']
 		arrival_stop_transit = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
+		bus_at_intermediate_transfer_stop = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_time']['text']
 		transit = "Transfer"
 		departure_stop_transit = transit_route['legs'][0]['steps'][3]['transit_details']['departure_stop']['name']
 		bus_at_transit_departure_stop = transit_route['legs'][0]['steps'][3]['transit_details']['departure_time']['text']
@@ -298,7 +305,7 @@ def get_transit_details(transit_route):
 		number_of_stops_second = transit_route['legs'][0]['steps'][3]['transit_details']['num_stops']
 		arrival_stop_final = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_stop']['name']
 		bus_at_final_destination_stop = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_time']['text'];
-		list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop]
+		list_with_direction = [departure_stop,bus_at_departure_stop,headsign_first,bus_number_first,number_of_stops_first,arrival_stop_transit,transit,departure_stop_transit,bus_at_transit_departure_stop,headsign_second,bus_number_second,number_of_stops_second,arrival_stop_final,bus_at_final_destination_stop,bus_at_intermediate_transfer_stop]
 
 	return list_with_direction
 
@@ -528,7 +535,7 @@ def findroutedetails(request):
 						result = list_arrive_depart_stop_id[2]
 						number_of_stops = int(number_of_stops)
 						print("Bus Number is",bus_number)
-						remove_duplicates = extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops)#,bus_at_departure_stop,bus_at_arrival_stop)
+						remove_duplicates = extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
 						
 						list_intermediate_bus_stops_alternate_stops.append(remove_duplicates)
 						print("-----------------------------------------------------------------------------------------")
@@ -544,15 +551,19 @@ def findroutedetails(request):
 				list_with_alternate_routes.append(list_with_direction)
 
 				departure_stop = list_with_direction[0]
+				bus_at_departure_stop = list_with_direction[1]
 				headsign_first = list_with_direction[2]
 				bus_number_first = list_with_direction[3]
 				number_of_stops_first = list_with_direction[4]
 				arrival_stop_transit = list_with_direction[5]
+				bus_at_intermediate_transfer_stop = list_with_direction[14]
 				departure_stop_transit = list_with_direction[7]
+				bus_at_transit_departure_stop = list_with_direction[8]
 				headsign_second = list_with_direction[9]
 				bus_number_second = list_with_direction[10]
 				number_of_stops_second = list_with_direction[11]
 				arrival_stop_final = list_with_direction[12]
+				bus_at_final_destination_stop = list_with_direction[13]
 				print("Bus Number first is",bus_number_first)
 				print("Bus Number second is",bus_number_second)
 				print("Departure Stop",departure_stop)
@@ -573,7 +584,7 @@ def findroutedetails(request):
 						result = list_arrive_depart_stop_id[2]
 						number_of_stops_first = int(number_of_stops_first)
 						print("Bus Number first is",bus_number_first)
-						remove_duplicates = extract_seq_numbers_bus_stops(headsign_first,bus_number_first,arrival_stop_id_first,departure_stop_id_first,number_of_stops_first)
+						remove_duplicates = extract_seq_numbers_bus_stops(headsign_first,bus_number_first,arrival_stop_id_first,departure_stop_id_first,number_of_stops_first,bus_at_departure_stop,bus_at_intermediate_transfer_stop,departure_date)
 						list_remove_duplicates.append(remove_duplicates)
 
 						#---------------------TRANSIT PART SECOND LEG INFO-------------------------------------------#	
@@ -587,7 +598,7 @@ def findroutedetails(request):
 							result = list_arrive_depart_stop_id[2]
 							number_of_stops_second = int(number_of_stops_second)
 							print("Bus Number second is",bus_number_second)
-							remove_duplicates = extract_seq_numbers_bus_stops(headsign_second,bus_number_second,arrival_stop_id_second,departure_stop_id_second,number_of_stops_second)
+							remove_duplicates = extract_seq_numbers_bus_stops(headsign_second,bus_number_second,arrival_stop_id_second,departure_stop_id_second,number_of_stops_second,bus_at_transit_departure_stop,bus_at_final_destination_stop,departure_date)
 							
 							#Add a check if remove_duplicates is [],pop the intermediate bus stops inserted for first leg
 							list_remove_duplicates.append(remove_duplicates)
@@ -717,6 +728,17 @@ def getnearestbusstops(request):
 
 def about(request):
 	return HttpResponse('<h1>BUS ABOUT</h1>')
+'''
+def search(request):
+    if 'q' in request.GET:
+        message = 'You searched for: %r' % request.GET['q']
+    else:
+        message = 'You submitted an empty form.'
+    return HttpResponse(message)
 
+    path('search/',views.search,name='bus-test-stop')
+'''
+#args = {}   args['result'] = result
+    
 
 
