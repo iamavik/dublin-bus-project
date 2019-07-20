@@ -5,6 +5,11 @@
         <title>Dublin Bus App</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+table, td {
+  border: 1px solid black;
+}
+</style>
     </head>
     
     <body>
@@ -28,6 +33,8 @@ Date of Trip:
             <option value="default">default</option>
         </select>
        <button onclick="getLocation()">Find nearest bus stops</button>
+       <button onclick="savetrip()"> Save a Trip as Favourite</button>
+       <button onclick="fetchsavedtrips()"> Show Favourites</button>
         Data is<p id="test"></p>
         <br><br>
         
@@ -59,6 +66,10 @@ Date of Trip:
         <p id = "demo16"></p>
     </div>
 -->
+Saved Trips are:
+<table id="myTable">
+
+</table>
 
 <p id="demo1"></p>
 <p id="demo2"></p>
@@ -337,6 +348,7 @@ popupDirections(marker);
 
       function calculateAndDisplayRoute(directionsService, directionsDisplay,flag,list_bus_lines,direction_data,list_intermediate_bus_stops,map,departure_date_time) {
         var data = document.getElementById('select').value;
+        //console.log("First data is",data)
         var selectedMode = "TRANSIT";
       //  var origin_stop_name = myObj[0][4];  
       //   var dest_stop_name = myObj[1][4];  
@@ -348,7 +360,10 @@ popupDirections(marker);
           var date,date_list,hr_mins,departure_time;
           if(selected_date=='' && selected_time=='')
           {
-          	var departure_time = Math.round(+new Date()/1000);
+          	var departure_time = departure_date_time;
+          	//var departure_time = Math.round(+new Date()/1000);
+          	console.log("if no depart time selected..current time");
+          	console.log(departure_time);
           	//date = new Date();
           }
           else
@@ -356,19 +371,25 @@ popupDirections(marker);
           //	var date_list =  selected_time.split("-");
           //	var hr_mins = selected_time.split(":");
           	var departure_time = departure_date_time;
+          	console.log("if departure date and time selected");
+          	console.log(departure_time);
           	//date = new Date(parseInt(date_list[0]),parseInt(date_list[1])-1,parseInt(date_list[2]),parseInt(hr_mins[0]),parseInt(hr_mins[1]));
           }
           console.log(departure_time);
-          var latitude1 = arr[0];
-          var longitude1 = arr[1];
-          var latitude2 = arr[2];
-          var longitude2 = arr[3];
+          //var latitude1 = arr[0]; Not required as now we use origin as String and no need to use latitude and longitude of the place
+          //var longitude1 = arr[1];
+          //var latitude2 = arr[2];
+          //var longitude2 = arr[3];
 
+      
+
+          var origin = document.getElementById("searchTextField").value;
+          var destination = document.getElementById("searchTextField2").value;
 
         directionsService.route({
         	
-          origin: {lat: latitude1, lng: longitude1},  // UCD
-          destination: {lat: latitude2, lng: longitude2},  // Temple Bar.
+          origin: origin,  // UCD
+          destination: destination,  // Temple Bar.
           // Note that Javascript allows us to access the constant
           // using square brackets and a string value as its
           // "property."
@@ -481,7 +502,7 @@ console.log(list);
       	{
       		data = direction_data.length-1;
       	}
-      	if(direction_data[data].length==18) //This is to diplay single bus journey
+      	if(direction_data[data].length==18) //This is to diplay single bus journey. The length of it is still 18. For bus transfer,length has increased by 1
 
       	{
       		deleteMarkers();
@@ -562,22 +583,22 @@ console.log(markers.length);
             }
 
 		//document.getElementById("info_panel").innerHTML=" ";
-      	document.getElementById("demo1").innerHTML = direction_data[data][1];
-      	document.getElementById("demo2").innerHTML = direction_data[data][2];
-      	document.getElementById("demo3").innerHTML = direction_data[data][3];
-      	document.getElementById("demo4").innerHTML = direction_data[data][4];
-      	document.getElementById("demo5").innerHTML = direction_data[data][6];
-      	document.getElementById("demo6").innerHTML = direction_data[data][8]
-      	document.getElementById("demo7").innerHTML = direction_data[data][9];
-      	document.getElementById("demo8").innerHTML = direction_data[data][10];
-      	document.getElementById("demo9").innerHTML = direction_data[data][11];
-      	document.getElementById("demo10").innerHTML = direction_data[data][12];
-      	document.getElementById("demo11").innerHTML = direction_data[data][13];
+      	document.getElementById("demo1").innerHTML = direction_data[data2][1];
+      	document.getElementById("demo2").innerHTML = direction_data[data2][2];
+      	document.getElementById("demo3").innerHTML = direction_data[data2][3];
+      	document.getElementById("demo4").innerHTML = direction_data[data2][4];
+      	document.getElementById("demo5").innerHTML = direction_data[data2][6];
+      	document.getElementById("demo6").innerHTML = direction_data[data2][8]
+      	document.getElementById("demo7").innerHTML = direction_data[data2][9];
+      	document.getElementById("demo8").innerHTML = direction_data[data2][10];
+      	document.getElementById("demo9").innerHTML = direction_data[data2][11];
+      	document.getElementById("demo10").innerHTML = direction_data[data2][12];
+      	document.getElementById("demo11").innerHTML = direction_data[data2][13];
       	//document.getElementById("demo12").innerHTML = direction_data[14];
       	
-      	document.getElementById("demo12").innerHTML = direction_data[data][15];
-      	document.getElementById("demo13").innerHTML = direction_data[data][16];
-      	document.getElementById("demo12").innerHTML = direction_data[data][17];
+      	document.getElementById("demo12").innerHTML = direction_data[data2][15];
+      	document.getElementById("demo13").innerHTML = direction_data[data2][16];
+      	document.getElementById("demo12").innerHTML = direction_data[data2][17];
       	flag2 = 1;
 }
 else
@@ -647,21 +668,21 @@ markers.push(marker);
                 });
             }
 	//document.getElementById("info_panel").innerHTML=" ";
-	document.getElementById("demo1").innerHTML = "Departure Bus Stop: "+direction_data[data][0];
-      	document.getElementById("demo2").innerHTML = "Predicted Arrival Time: "+ direction_data[data][1];
-      	document.getElementById("demo3").innerHTML = "Headsign: "+direction_data[data][2];
-      	document.getElementById("demo4").innerHTML = "Bus Number: "+direction_data[data][3];
-      	document.getElementById("demo5").innerHTML = "No. of stops to travel: "+direction_data[data][4];
-      	document.getElementById("demo6").innerHTML = "Transit arrival bus stop: "+direction_data[data][5]
-      	document.getElementById("demo7").innerHTML = "Transfer:"+direction_data[data][6];
-      	document.getElementById("demo8").innerHTML = "Transit Departure bus stop: "+direction_data[data][7];
-      	document.getElementById("demo9").innerHTML = "Predicted Arrival Time: "+direction_data[data][8];
-      	document.getElementById("demo10").innerHTML = "Headsign: "+direction_data[data][9];
-      	document.getElementById("demo11").innerHTML = "Bus Number: "+direction_data[data][10];
+	document.getElementById("demo1").innerHTML = "Departure Bus Stop: "+direction_data[data2][0];
+      	document.getElementById("demo2").innerHTML = "Predicted Arrival Time: "+ direction_data[data2][1];
+      	document.getElementById("demo3").innerHTML = "Headsign: "+direction_data[data2][2];
+      	document.getElementById("demo4").innerHTML = "Bus Number: "+direction_data[data2][3];
+      	document.getElementById("demo5").innerHTML = "No. of stops to travel: "+direction_data[data2][4];
+      	document.getElementById("demo6").innerHTML = "Transit arrival bus stop: "+direction_data[data2][5]
+      	document.getElementById("demo7").innerHTML = "Transfer:"+direction_data[data2][6];
+      	document.getElementById("demo8").innerHTML = "Transit Departure bus stop: "+direction_data[data2][7];
+      	document.getElementById("demo9").innerHTML = "Predicted Arrival Time: "+direction_data[data2][8];
+      	document.getElementById("demo10").innerHTML = "Headsign: "+direction_data[data2][9];
+      	document.getElementById("demo11").innerHTML = "Bus Number: "+direction_data[data2][10];
       	//document.getElementById("demo12").innerHTML = direction_data[14];
-      	document.getElementById("demo12").innerHTML = "No. of stops to travel: "+direction_data[data][11];
-      	document.getElementById("demo13").innerHTML = "Arrival bus stop: "+direction_data[data][12];
-      	document.getElementById("demo14").innerHTML = "Arrival time to final bus stop:" + direction_data[data][13] ;
+      	document.getElementById("demo12").innerHTML = "No. of stops to travel: "+direction_data[data2][11];
+      	document.getElementById("demo13").innerHTML = "Arrival bus stop: "+direction_data[data2][12];
+      	document.getElementById("demo14").innerHTML = "Arrival time to final bus stop:" + direction_data[data2][13] ;
       	flag2 = 1;
 
 }
@@ -1027,9 +1048,9 @@ popupDirections(marker);
                		var closest_3_stops = myObj.closest_3_stops;
                		
 
-               	console.log("test_success");
-               	console.log(closest_3_stops);
-               	console.log(closest_3_stops_bus_info);
+             //  	console.log("test_success");
+             //  	console.log(closest_3_stops);
+             //  	console.log(closest_3_stops_bus_info);
                	show_closest_bus_stops(closest_3_stops,closest_3_stops_bus_info,current_latitude,current_longitude);
 
 
@@ -1042,6 +1063,153 @@ popupDirections(marker);
 
    				
 });
+
+				}
+
+				var k=0;
+				var save_favourites = new Array();
+				//localStorage.removeItem("array"); //Refreshing/Clearing the web storage for evry ctrl+f5
+
+				function savetrip()
+				{
+						var source = document.getElementById("searchTextField").value;
+                		var dest  = document.getElementById("searchTextField2").value;
+					// Check browser support
+					if (typeof(Storage) !== "undefined") {
+  					// Store
+  					save_favourites.push(source);
+  					save_favourites.push('/');
+  					save_favourites.push(dest);
+  					save_favourites.push('/');
+  					//localStorage.setItem("source"+k, source);
+  					localStorage.setItem("array",save_favourites);
+
+  				
+  
+  				
+			} else {
+  				alert("Sorry, Information cannot be saved at the moment") ;
+}
+
+
+				}
+
+				function fetchsavedtrips()
+				{
+					// Retrieve
+					var list_fave_trips = localStorage.getItem("array");
+					list_fave_trips = list_fave_trips.slice(0,list_fave_trips.length-2);
+					 list_fave_trips = list_fave_trips.split(",/,");
+			
+				document.getElementById("myTable").innerHTML="";
+				 var table = document.getElementById("myTable");//can be put inside the for-loop also
+
+
+			
+				for(var i= 0;i<(list_fave_trips.length)-1;i=i+2)
+				{
+						
+ 				 var row = table.insertRow(0);
+  				var cell1 = row.insertCell(0);
+ 				 var cell2 = row.insertCell(1);
+ 				 var cell3 = row.insertCell(2);
+ 				 var cell4 = row.insertCell(3);
+ 				 
+ 				 var first_letter = list_fave_trips[i].charAt(0);
+ 				 
+ 				 if(first_letter==',' )
+ 				 {
+ 				 	list_fave_trips[i] = list_fave_trips[i].replace(",", "");
+
+ 				 }
+ 				 //list_fave_trips[i+1] = list_fave_trips[i+1].replace(",", "");
+					
+  				cell1.innerHTML = list_fave_trips[i];
+  				cell2.innerHTML = list_fave_trips[i+1];
+  				cell3.innerHTML = '<input type="button" value="Use this trip" onClick="Selected(\''+list_fave_trips[i]+"/"+list_fave_trips[i+1]+'\')"/>' ;
+  				cell4.innerHTML = '<input type="button" value="Delete" onClick="Delete(\''+list_fave_trips[i]+"/"+list_fave_trips[i+1]+'\')"/>' ;
+
+  				
+
+  				//"<button onclick='Selected();'>"+"Use this trip"+"</button>"
+
+
+
+
+				}
+
+				
+				
+				
+
+    			//document.getElementById("result2").innerHTML = localStorage.getItem("lastname");
+
+
+
+				}
+
+				 function Selected(value)
+				{
+					//console.log(value);
+					var source_destination = value.split("/");
+					var source = source_destination[0];
+					var destination = source_destination[1];
+					//console.log(source);
+					//console.log(destination);
+					document.getElementById("searchTextField").value = source;
+					document.getElementById("searchTextField2").value = destination;
+
+				}
+
+				function Delete(value)
+				{
+
+					var list_all_trips = localStorage.getItem("array");
+					//console.log(typeof(list_all_trips));
+					//console.log(list_all_trips);
+					//console.log("Inside Delete Function");
+					//console.log(value);
+					var source_destination = value.split("/");
+					var source = source_destination[0];
+					var destination = source_destination[1];
+					//console.log(source+',/,'+destination+',/');
+					//console.log(list_all_trips.search(source+',/,'+destination+',/'));
+					var string = source+',/,'+destination+',/';
+					list_all_trips = list_all_trips.replace(string,"");
+					//console.log("After deleting elements");
+					//console.log(list_all_trips);
+					var position = save_favourites.indexOf(source);
+					if(save_favourites[position+2]==destination && position%2==0)
+					{
+						//console.log("Position is: ",position);
+						save_favourites.splice(position,4);
+						//console.log("Save Favourites Inside Delete Inside if");
+					//console.log(save_favourites);
+					}
+					else
+					{
+						for(var i=position;i<save_favourites.length;i=i+4)
+						{
+							var new_position = save_favourites.indexOf(source,i);
+							//console.log("New position is",new_position);
+							
+							if(new_position%2==0 && save_favourites[new_position+2]==destination)
+							{
+
+								save_favourites.splice(new_position,4);
+								//console.log("Save Favourites Inside Delete Inside Else");
+					//console.log(save_favourites);
+								break;
+
+							}
+							
+						}
+					}
+					//console.log("Save Favourites Inside Delete");
+					//console.log(save_favourites);
+					//save_favourites = list_all_trips;
+					localStorage.setItem("array",save_favourites);
+					fetchsavedtrips();
 
 				}
 
