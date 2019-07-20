@@ -31,36 +31,51 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 		print("Bus Line is",bus_line)
 		extract_dept_stop_id = int(departure_stop_id[-4:])
 		print("Extracted departure stop id is",extract_dept_stop_id)
+		print("Sequence Number of departure stop id",departure_bus_seq)
 		extract_arr_stop_id = int(arrival_stop_id[-4:])
 		print("Extracted arrival stop id is",extract_arr_stop_id)
+		print("Sequence Number of arrival stop id",arrival_bus_seq)
 		print("Bus at depart stop",bus_at_departure_stop)
 		print("Bus at arrival stop", bus_at_arrival_stop)
 		a = bus_at_departure_stop[-2:]
 		if(a=='am'):
+			#print("Inside am")
 			bus_at_departure_stop = bus_at_departure_stop[:-2]
 			bus_at_departure_stop = bus_at_departure_stop.split(':')
 			hr_in_sec_1 = int(bus_at_departure_stop[0])*3600
 			mins_sec_1 = int(bus_at_departure_stop[1])*60
 			time_secs_1 = hr_in_sec_1+mins_sec_1
 		else:
+			#print("Inside pm")
 			bus_at_departure_stop = bus_at_departure_stop[:-2]
 			bus_at_departure_stop = bus_at_departure_stop.split(':')
-			hr_in_sec_1 = (int(bus_at_departure_stop[0])+12)*3600
+			if(int(bus_at_departure_stop[0])==12):
+				hr_in_sec_1 = (int(bus_at_departure_stop[0]))*3600
+			else:
+				hr_in_sec_1 = (int(bus_at_departure_stop[0])+12)*3600
 			mins_sec_1 = int(bus_at_departure_stop[1])*60
 			time_secs_1 = hr_in_sec_1+mins_sec_1
 
 		print("Time in seconds1",time_secs_1)
 		a = bus_at_arrival_stop[-2:]
 		if(a=='am'):
+			#print("Inside am")
 			bus_at_arrival_stop = bus_at_arrival_stop[:-2]
 			bus_at_arrival_stop = bus_at_arrival_stop.split(':')
 			hr_in_sec_2 = int(bus_at_arrival_stop[0])*3600
 			mins_sec_2 = int(bus_at_arrival_stop[1])*60
 			time_secs_2 = hr_in_sec_2+mins_sec_2
 		else:
+			#print("Inside pm")
 			bus_at_arrival_stop = bus_at_arrival_stop[:-2]
 			bus_at_arrival_stop = bus_at_arrival_stop.split(':')
-			hr_in_sec_2 = (int(bus_at_arrival_stop[0])+12)*3600
+			if(int(bus_at_arrival_stop[0])==12):
+				hr_in_sec_2 = (int(bus_at_arrival_stop[0]))*3600
+			else:
+				hr_in_sec_2 = (int(bus_at_arrival_stop[0])+12)*3600
+
+
+			
 			mins_sec_2 = int(bus_at_arrival_stop[1])*60
 			time_secs_2 = hr_in_sec_2+mins_sec_2
 
@@ -72,65 +87,66 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 			file_name = bus_line+'.pickle'
 			model_file = os.path.join(CURRENT_DIR, file_name)
 			if(day_of_week=="Friday"):
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,1,0,0,0,0]]
+
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,1,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Monday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,1,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,1,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Thursday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,1,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,1,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Tuesday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,0,1,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,0,1,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Wednesday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,0,0,1]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,0,0,1]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 		
@@ -139,77 +155,77 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 			file_name = bus_line+'.pickle'
 			model_file = os.path.join(CURRENT_DIR, file_name)
 			if(day_of_week=="Monday"):
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,1,0,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,1,0,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Saturday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,1,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,1,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 			if(day_of_week=="Sunday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,1,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,1,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Thursday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,0,1,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,0,1,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Tuesday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,0,0,1,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1,0]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,0,0,1,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1,0]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
 
 			if(day_of_week=="Wednesday"):
 
-				request_to_model = [[int(departure_bus_seq),int(extract_arr_stop_id),time_secs_1,0,0,0,0,0,1]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,0,1]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
 				predicted_arrival_time_1 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the departure bus stop is",predicted_arrival_time_1)
-				request_to_model = [[int(arrival_bus_seq),int(extract_dept_stop_id),time_secs_2,0,0,0,0,0,1]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,0,1]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 
