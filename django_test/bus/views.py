@@ -671,6 +671,19 @@ def getnearestbusstops(request):
 	except:
 		return("Error")
 
+def getalltouristplaces(request):
+	try:
+		sql_5 = "SELECT * FROM mydbservlet.tourist_places"
+		db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
+		cursor = db.cursor()
+		cursor.execute(sql_5,)
+		list_tourist_places = cursor.fetchall()
+		list_tourist_places = list(list_tourist_places)
+		return HttpResponse(json.dumps({'list_tourist_places':list_tourist_places}))
+
+	except:
+		return("Error")
+
 
 
 
