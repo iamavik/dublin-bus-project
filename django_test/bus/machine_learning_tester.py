@@ -39,14 +39,14 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 		print("Bus at arrival stop", bus_at_arrival_stop)
 		a = bus_at_departure_stop[-2:]
 		if(a=='am'):
-			#print("Inside am")
+			print("Inside am")
 			bus_at_departure_stop = bus_at_departure_stop[:-2]
 			bus_at_departure_stop = bus_at_departure_stop.split(':')
 			hr_in_sec_1 = int(bus_at_departure_stop[0])*3600
 			mins_sec_1 = int(bus_at_departure_stop[1])*60
 			time_secs_1 = hr_in_sec_1+mins_sec_1
 		else:
-			#print("Inside pm")
+			print("Inside pm")
 			bus_at_departure_stop = bus_at_departure_stop[:-2]
 			bus_at_departure_stop = bus_at_departure_stop.split(':')
 			if(int(bus_at_departure_stop[0])==12):
@@ -59,14 +59,14 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 		print("Time in seconds1",time_secs_1)
 		a = bus_at_arrival_stop[-2:]
 		if(a=='am'):
-			#print("Inside am")
+			print("Inside am")
 			bus_at_arrival_stop = bus_at_arrival_stop[:-2]
 			bus_at_arrival_stop = bus_at_arrival_stop.split(':')
 			hr_in_sec_2 = int(bus_at_arrival_stop[0])*3600
 			mins_sec_2 = int(bus_at_arrival_stop[1])*60
 			time_secs_2 = hr_in_sec_2+mins_sec_2
 		else:
-			#print("Inside pm")
+			print("Inside pm")
 			bus_at_arrival_stop = bus_at_arrival_stop[:-2]
 			bus_at_arrival_stop = bus_at_arrival_stop.split(':')
 			if(int(bus_at_arrival_stop[0])==12):
