@@ -6,39 +6,23 @@ from . import machine_learning_tester
 from .machine_learning_tester import ml_model
 from datetime import datetime
 from calendar import timegm
-#from .machine_learning_tester.py import *
 import joblib
-#import pickle
 import _pickle as cPickle
 import os
+from django.views.decorators.csrf import csrf_exempt
 CURRENT_DIR = os.path.dirname(__file__)
-#model_file = os.path.join(CURRENT_DIR, 'prediction_46A_cPickle.pickle')
 
+#When the application is launched, render the index.html page before any other operation
 def home(request):
-	'''
-	sql = "select ﻿stop_lat,stop_lon,stop_name,stop_id from mydbservlet.stops_2ttest_bus_stops where stop_name='Belfield, University College Dublin' or stop_name='Temple Bar, Aston Quay'"
-	db = pymysql.connect(host="127.0.0.1",  # your host
-                         user="root",  # username
-                         passwd="Ganesha-46",  # password
-                         db="mydbservlet")  # name of the database
-
-
-	cursor = db.cursor()
-	cursor.execute(sql)
-	result = cursor.fetchall()
-	result = json.dumps(result)
-	args={}
-	args['result']=result
-	'''
-	#print(args)
-
-	#return render(request,'bus/index.html',args)
-
 	return render(request,'bus/index.html')
 
 
-
 def find_correct_stop(bus_number,headsign,closest_15_stops):
+	'''
+	The function is called from extract_correct_depart_arrival_stop_id() to find the actual bus stop that a bus line passes through
+	from the array of 15 bus stops that was fetched by the calling function. For every bus line this function is called twice, once to
+	get the correct departure bus stop id (among the 15 bus stops) and once to get the correct arrival bus stop id  
+	'''
 	for data in closest_15_stops:
 		print("Data is",data)
 		stop_id_check = data[2]
@@ -58,6 +42,12 @@ def find_correct_stop(bus_number,headsign,closest_15_stops):
 
 
 def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign,lat1,long1,lat2,long2,result):
+	'''
+	The function is called from findroutedetails() to find correct stop id of the source and destination bus stop of a particular bus line
+	and headsign. Google Maps API in many cases returns bus stop names that do not match with the bus stop name in the database. So correct stop
+	id cannot be generated from the bus stop name. Using latitude and longitude of a bus stop (provided from Google route), we find the nearest
+	15 stops (using bus stop coordinates in our database ) closest to that suggested stop.   
+	'''
 	try:
 		#For departure bus stop
 		from geopy import distance
@@ -70,34 +60,28 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 			distances_dept.append(dist)
 
     	#For departure bus stop
-		closest_15_indexes = np.argsort(distances_dept)[:15] #Change 15 to any number as much as you want for nearest bus numbers
+		closest_15_indexes = np.argsort(distances_dept)[:15] #Change 15 to any number as much as we want for nearest bus numbers
 		closest_15_stops_dept = []
 		for i in closest_15_indexes:
 			closest_15_stops_dept.append(result[i])
 		print("closest stops to your location is: ",closest_15_stops_dept)
 
 		#For arrival bus stop
-
 		arrival_bus_stop_location = (lat1,long1)
 		distances_arrival = []
 		for i in result:
 			stop_location = (i[0],i[1])
 			dist = distance.distance(arrival_bus_stop_location, stop_location).km
 			distances_arrival.append(dist)
-
     	#For arrival bus stop
-		closest_15_indexes = np.argsort(distances_arrival)[:15] #Change 15 to any number as much as you want for nearest bus numbers
+		closest_15_indexes = np.argsort(distances_arrival)[:15] #Change 15 to any number as much as we want for nearest bus numbers
 		closest_15_stops_arrival = []
 		for i in closest_15_indexes:
 			closest_15_stops_arrival.append(result[i])
 		print("closest stops to your location is: ",closest_15_stops_arrival)
 		
-
-
-
 		actual_departure_stop_info = find_correct_stop(bus_number,headsign,closest_15_stops_dept)
 		actual_arrival_stop_info = find_correct_stop(bus_number,headsign,closest_15_stops_arrival)
-
 		arrival_stop_id = actual_arrival_stop_info[2]
 		departure_stop_id = actual_departure_stop_info[2]
 
@@ -105,19 +89,23 @@ def extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_numbe
 
 		print("arrival_stop_id",arrival_stop_id)
 		print("departure_stop_id",departure_stop_id)
-		list_arrive_depart_stop_id=[]
+		list_arrive_depart_stop_id = []
 		list_arrive_depart_stop_id.append(arrival_stop_id)
 		list_arrive_depart_stop_id.append(departure_stop_id)
 
 		return list_arrive_depart_stop_id
+	
 	except:
-		#extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign)
 		return 0
 
 
 
 def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop,departure_date):
-	#23-06 Adding Code
+	'''
+	The function is called from findroutedetails() to find the sequence number of the departure and arrival bus stop for a particular bus line
+	and also using the sequence number to find the intermediate bus stops between source and destination which is used to display as markers on the map
+	'''
+
 			
 	sql_2 = """select mydbservlet.stops_times.bus_stop_number,mydbservlet.stops_times.stop_sequence,mydbservlet.trips_info_bus_number.direction_id,mydbservlet.stops_times.headsign,mydbservlet.stops_times.bus_number,
 		mydbservlet.stops_times.trip_id from mydbservlet.stops_times,
@@ -130,9 +118,9 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 	print(seq_numbers)
 	seq_numbers = list(seq_numbers)
 	print("length of sequence numbers is",len(seq_numbers))
-	if(len(seq_numbers)>2):
+	if(len(seq_numbers)>2): #It is possible for a bus line having same headsign returning different tuple of sequence numbers (Eg:-(40,60),(48,68)). This is because of different trips that a bus line can cover where the sequence number of the same bus stop changes. 
 		i = 0
-		while(i<len(seq_numbers)-1):
+		while(i<len(seq_numbers)-1): # To find the correct combination of sequence numbers for departure and arrrival bus stop id 
 			if( seq_numbers[i+1][1]-seq_numbers[i][1]==number_of_stops):
 				departure_bus_seq = seq_numbers[i][1]
 				arrival_bus_seq = seq_numbers[i+1][1]
@@ -181,38 +169,35 @@ def extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_
 						and stops_times.headsign = %s and stops_times.stop_sequence between %s and %s and trips_info_bus_number.direction_id=%s and mydbservlet.stops_times.trip_id=%s  order by mydbservlet.stops_times.stop_sequence"""
 
 	cursor = db.cursor()
-	#cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq)+1,int(arrival_bus_seq)-1,))
 	cursor.execute(sql_intermed_bus_stops,(bus_number,headsign_seq,int(departure_bus_seq),int(arrival_bus_seq),int(direction_id),trip_id,))
 	intermediate_bus_stops = cursor.fetchall()
 
 	print("intermediate bus stops",intermediate_bus_stops)
-	seen = set()
+	seen = set()  # To handle duplicates in case if the same bus stop id has been returned more than once with a different sequence number
 	seen_add = seen.add
 	remove_duplicates = [x for x in intermediate_bus_stops if not (x[0] in seen or seen_add(x[0]))]
 
 	print("Length of intermediate_bus_stops",len(intermediate_bus_stops))
-	remove_duplicates = [x for x in remove_duplicates if not (x[1] in seen or seen_add(x[1]))]
+	remove_duplicates = [x for x in remove_duplicates if not (x[1] in seen or seen_add(x[1]))] #Contains the fileterd bus stop id's with their sequence number after removing duplicates if any that were present
 	print("Length of intermediate_bus_stops remove duplicates",len(remove_duplicates))
 	
 	print("List of sequence bus stops after removing duplicates",remove_duplicates)
 
-	ml_model(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
-	'''
-	if(bus_number=="46a"):
-		print("Now calling machine learning model..testing only for 46A")
-		test_ml_model_46A(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop)
-	'''
 	return(remove_duplicates)
 
 
 def get_transit_details(transit_route):
+	'''
+	To store the information specific to a trip involving one/multiple bus transfers suggested by Google Directions API in a list. 
+	The function is called from the Else block of findroutedetails() function indicating the journey may involve bus transfers. 
+
+	'''
 	if(len(transit_route['legs'][0]['steps'])==4):
 
 		departure_stop = transit_route['legs'][0]['steps'][1]['transit_details']['departure_stop']['name']
 		bus_at_departure_stop = transit_route['legs'][0]['steps'][1]['transit_details']['departure_time']['text']
 		headsign_first = transit_route['legs'][0]['steps'][1]['transit_details']['headsign']
 		bus_number_first = transit_route['legs'][0]['steps'][1]['transit_details']['line']['short_name']
-		#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 		number_of_stops_first = transit_route['legs'][0]['steps'][1]['transit_details']['num_stops']
 		arrival_stop_transit = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
 		bus_at_intermediate_transfer_stop = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_time']['text'] #Added 17-07 appended end of the list_with_direction
@@ -227,7 +212,6 @@ def get_transit_details(transit_route):
 			bus_at_transit_departure_stop = transit_route['legs'][0]['steps'][2]['transit_details']['departure_time']['text']
 			headsign_second = transit_route['legs'][0]['steps'][2]['transit_details']['headsign']
 			bus_number_second = transit_route['legs'][0]['steps'][2]['transit_details']['line']['short_name']
-			#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 			number_of_stops_second = transit_route['legs'][0]['steps'][2]['transit_details']['num_stops']
 			arrival_stop_final = transit_route['legs'][0]['steps'][2]['transit_details']['arrival_stop']['name']
 			bus_at_final_destination_stop = transit_route['legs'][0]['steps'][2]['transit_details']['arrival_time']['text']
@@ -242,7 +226,6 @@ def get_transit_details(transit_route):
 			bus_at_transit_departure_stop = transit_route['legs'][0]['steps'][3]['transit_details']['departure_time']['text']
 			headsign_second = transit_route['legs'][0]['steps'][3]['transit_details']['headsign']
 			bus_number_second = transit_route['legs'][0]['steps'][3]['transit_details']['line']['short_name']
-			#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 			number_of_stops_second = transit_route['legs'][0]['steps'][3]['transit_details']['num_stops']
 			arrival_stop_final = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_stop']['name']
 			bus_at_final_destination_stop = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_time']['text'];
@@ -260,7 +243,6 @@ def get_transit_details(transit_route):
 		bus_at_departure_stop = transit_route['legs'][0]['steps'][1]['transit_details']['departure_time']['text']
 		headsign_first = transit_route['legs'][0]['steps'][1]['transit_details']['headsign']
 		bus_number_first = transit_route['legs'][0]['steps'][1]['transit_details']['line']['short_name']
-		#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 		number_of_stops_first = transit_route['legs'][0]['steps'][1]['transit_details']['num_stops']
 		arrival_stop_transit = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
 		bus_at_intermediate_transfer_stop = transit_route['legs'][0]['steps'][1]['transit_details']['arrival_time']['text']
@@ -275,7 +257,6 @@ def get_transit_details(transit_route):
 		bus_at_transit_departure_stop = transit_route['legs'][0]['steps'][3]['transit_details']['departure_time']['text']
 		headsign_second = transit_route['legs'][0]['steps'][3]['transit_details']['headsign']
 		bus_number_second = transit_route['legs'][0]['steps'][3]['transit_details']['line']['short_name']
-		#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 		number_of_stops_second = transit_route['legs'][0]['steps'][3]['transit_details']['num_stops']
 		arrival_stop_final = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_stop']['name']
 		bus_at_final_destination_stop = transit_route['legs'][0]['steps'][3]['transit_details']['arrival_time']['text'];
@@ -293,6 +274,11 @@ def get_transit_details(transit_route):
 
 
 def unix_time(dttm=None):
+	'''
+	The function is called from findroutedetails() to convert the user submitted date and time format to UTC time, since Google Maps
+	API take input in UTC time
+
+	'''
 	from datetime import datetime
 	from calendar import timegm
 	if dttm is None:
@@ -300,11 +286,19 @@ def unix_time(dttm=None):
 	return timegm(dttm.utctimetuple())
 
 	
-
+@csrf_exempt
 def findroutedetails(request):
+	'''
+	On Clicking the 'Depart Now' button in the web-page, information/request submitted by the user (Eg: Departure date, Source and Destination) 
+	is receieved by this function to extract the equivalent information from the request. Based on the source and destination, and the bus line
+	(from Google routes), it is checked if a bus line is operated by 'Dublin Bus', in that case we find the intermediate stops for that line (to
+	display as markers on the Map)and also the sequence number of source and destination bus stop for a particular bus line goes in as an input 
+	to the machine learning model. In case if a bus line is not operated by Dublin Bus, the information from Google route itself is displayed to
+	the user  
+	'''
 	source = request.POST['origin']
 	destination = request.POST['destination']
-	departure_date = request.POST.get('departure_date', False)
+	departure_date = request.POST.get('departure_date', False)  #Default to False in case, user has not chosen any departure date/time
 	departure_time = request.POST.get('departure_time', False)
 	
 	print(source)
@@ -314,7 +308,6 @@ def findroutedetails(request):
 	
 
 	if(departure_date=='' and departure_time==''):
-		#now = datetime.now()
 		departure_date_time = unix_time()
 	elif(departure_date=='' and departure_time!=''):
 		x = str(datetime.now())
@@ -328,102 +321,42 @@ def findroutedetails(request):
 
 		departure_date_time = unix_time(datetime(int(date_requested[0]),int(date_requested[1]),int(date_requested[2]),int(time_hr_min[0])-1,int(time_hr_min[1])))
 
-
-
-
-# Note: if you pass in a naive dttm object it's assumed to already be in UTC
-
-
-
-
 	# importing required libraries 
-	import requests, json, pymysql
-
-	'''
-
-	# enter your api key here 
-	api_key ='AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus'
-	#UniversityCollegeDublin,Dublin
-	# Take source as input 
-	origin = source 
-
-	# Take destination as input 
-	dest = destination 
-
-	# url variable store url 
-	url ='https://maps.googleapis.com/maps/api/directions/json?alternatives=true&'
-
-	#https://maps.googleapis.com/maps/api/directions/json?alternatives=true&origin=bieberstrasse,+dusseldorf&destination=norf,+neuss&sensor=false&mode=transit&departure_time=1399399424&key=AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus
-	#API to get alternate routes
-	#https://maps.googleapis.com/maps/api/directions/json?alternatives=true&origin=universitycollegedublin&destination=templebar,dublin&sensor=false&mode=transit&key=AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus
-	# Get method of requests module 
-	# return response object 
-
-	r = requests.get(url + 'origin=' + source +'&destination=' + dest+'&sensor='+"false"+'&mode='+"transit"+'&key=' + api_key) 
-
-	# json method of response object 
-	# return json format result 
-	x = r.json() 
-	'''
-
-	
+	import requests	
 	import googlemaps
 	
 
 	gmaps = googlemaps.Client(key='AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus')
 
-
-	#now = datetime.now()
 	x = gmaps.directions(origin=source,
                                      destination=destination,
                                      alternatives="true",
                                      mode="transit",
                                      transit_mode="bus",
                                      departure_time=departure_date_time
-                                     
-                                     
-                                    )
-	#departure_time=now has to be added after transit_mode
-
-	#https://maps.googleapis.com/maps/api/directions/json?origin=Brooklyn&destination=Queens&departure_time=1563043538093&mode=transit&key=AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus
-
-
-
-
-
-
-
+                                  	)  #Sending the request to Google MAPS DIRECTIONS API 
 	
 
-	# bydefault driving mode considered 
-
-	# print the vale of x 
-	#print(x['geocoded_waypoints']) 
-	#print(x['routes'])
-	#print(x['geocoded_waypoints']) 
-	#print("-----------------------------------")
-	if(len(x)!=0):
-	#if(len(x['routes'])!=0): Change made on 11/07 after adding python Google Maps interface
+	if(len(x)!=0): #Check if Google MAPS API has not return Error as a response, otherwise the Else block returns 'Error' as response to the Ajax call
+		
 		sql_2 = """select distinct mydbservlet.stops_times.bus_number from mydbservlet.stops_times"""
 		db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
 		cursor = db.cursor()
 		cursor.execute(sql_2,)
 		list_all_bus_numbers = cursor.fetchall()
 		list_all_bus_numbers = list(list_all_bus_numbers)
-		print("List of all Bus Numbers in Dublin",list_all_bus_numbers)
-		list_with_alternate_routes = []
-		list_intermediate_bus_stops_alternate_stops = []
+		print("List of all Bus Lines in Dublin",list_all_bus_numbers)
+		list_with_alternate_routes = []    #List of lists where direction information specific to all bus lines is stored, with information specific to a bus line stored as an indiviudal list 
+		list_intermediate_bus_stops_alternate_stops = []  #List of lists where intermediate bus stops specific to a bus line is stored as a list
 		sql = """select ﻿stop_lat,stop_lon,stop_id,stop_name,STOP_ID_LAST_4 from mydbservlet.stops_2ttest_bus_stops""" 
 		db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
 		cursor = db.cursor()
 		cursor.execute(sql,)
 		result = list(cursor.fetchall())
 		for i in x:
-		#for i in x['routes']: Change made on 11/07 after adding python Google Maps interface
-			if(len(i['legs'][0]['steps'])==3 ):
+			if(len(i['legs'][0]['steps'])==3 ):  #Check if a journey is a single trip i.e., without requiring any bus transfer
 
 				total_duration = i['legs'][0]['duration']['text']
-			#print("-----------------------------------")
 				total_time = i['legs'][0]['distance']['text']
 				html_inst1 = i['legs'][0]['steps'][0]['html_instructions']
 				dist_bus_stop_walk = i['legs'][0]['steps'][0]['distance']['text']
@@ -432,55 +365,54 @@ def findroutedetails(request):
 				bus_distance = i['legs'][0]['steps'][1]['distance']['text']
 				bus_time = i['legs'][0]['steps'][1]['duration']['text']
 				departure_stop = i['legs'][0]['steps'][1]['transit_details']['departure_stop']['name']
-				#dept_stop = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['departure_stop']['name']
 				bus_at_departure_stop = i['legs'][0]['steps'][1]['transit_details']['departure_time']['text']
 				headsign = i['legs'][0]['steps'][1]['transit_details']['headsign']
 				bus_number = i['legs'][0]['steps'][1]['transit_details']['line']['short_name']
-				#bus_num = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['line']['short_name']
 				number_of_stops = i['legs'][0]['steps'][1]['transit_details']['num_stops']
 				arrival_stop = i['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
-				#arr_stop = x['routes'][0]['legs'][0]['steps'][1]['transit_details']['arrival_stop']['name']
 				html_inst3 = i['legs'][0]['steps'][2]['html_instructions']
 				distance_to_dest = i['legs'][0]['steps'][2]['distance']['text']
 				time_by_walk_dest = i['legs'][0]['steps'][2]['duration']['text']
-				#bus_at_arrival_stop newly added
 				bus_at_arrival_stop = i['legs'][0]['steps'][1]['transit_details']['arrival_time']['text']
-				print("Departure Stop no bus transfer",departure_stop)
-				print("Arrival stop no bus transfer",arrival_stop)
-				print("Headsign no bus transfer",headsign)
 				list_with_direction = [total_duration, total_time,html_inst1,dist_bus_stop_walk,time_to_bus_stop_walk,html_inst2,bus_distance,bus_time,departure_stop,bus_at_departure_stop,headsign,bus_number,number_of_stops,arrival_stop,html_inst3,distance_to_dest,bus_at_arrival_stop,time_by_walk_dest]
 				list_with_alternate_routes.append(list_with_direction)
 
-				print("Bus number is",bus_number)
 				lat1 = i['legs'][0]['steps'][1]['transit_details']['arrival_stop']['location']['lat']
 				long1 = i['legs'][0]['steps'][1]['transit_details']['arrival_stop']['location']['lng']
 				lat2 = i['legs'][0]['steps'][1]['transit_details']['departure_stop']['location']['lat']
 				long2 = i['legs'][0]['steps'][1]['transit_details']['departure_stop']['location']['lng']
+
+				#Check if the bus line suggested by Google direction API is available in our Dublin Bus database
 				if(i['legs'][0]['steps'][1]['transit_details']['line']['short_name'].upper() in list(map(itemgetter(0),list_all_bus_numbers))):
 
 					departure_stop ='%'+departure_stop+'%'
 					arrival_stop ='%'+arrival_stop+'%'
 
-					list_arrive_depart_stop_id=extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign,lat1,long1,lat2,long2,result)
+					list_arrive_depart_stop_id = extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop,bus_number,headsign,lat1,long1,lat2,long2,result)
 					print("Return of extract_correct_depart_arrival_stop_id",list_arrive_depart_stop_id)
 					if(list_arrive_depart_stop_id!=0):
 						arrival_stop_id = list_arrive_depart_stop_id[0]
-						departure_stop_id = list_arrive_depart_stop_id[1]
-						
+						departure_stop_id = list_arrive_depart_stop_id[1]			
 						number_of_stops = int(number_of_stops)
 						print("Bus Number is",bus_number)
 						remove_duplicates = extract_seq_numbers_bus_stops(headsign,bus_number,arrival_stop_id,departure_stop_id,number_of_stops,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
-						
 						list_intermediate_bus_stops_alternate_stops.append(remove_duplicates)
+						departure_bus_seq = remove_duplicates[0][1]
+						arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
+						list_time_info = ml_model(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
+						print("Result from Machine Learning Model is",list_time_info)
+						if(len(list_time_info)!=0):
+							list_with_alternate_routes[len(list_with_alternate_routes)-1][9] = list_time_info[0]   #Time of arrival of the bus at departure stop
+							list_with_alternate_routes[len(list_with_alternate_routes)-1][16] = list_time_info[1]  #Time of arrival of the bus at arrival stop 
+
 						print("-----------------------------------------------------------------------------------------")
 					else: #This else is doing error handling if list_arrive_depart_stop_id returns 0 in case of a database failure
 						pass
 				else:
-					#pass
 					list_intermediate_bus_stops_alternate_stops.append([])
 
 
-			elif(len(i['legs'][0]['steps'])==4 or len(i['legs'][0]['steps'])==5 ):
+			elif(len(i['legs'][0]['steps'])==4 or len(i['legs'][0]['steps'])==5 ): #To handle one or more bus transfer
 				
 				print("Routes from google apis",i)
 				list_with_direction = get_transit_details(i)
@@ -516,12 +448,11 @@ def findroutedetails(request):
 				print("Departure Stop Transit",departure_stop_transit)
 				print("Arrival Stop Final",arrival_stop_final)
 
+				#Check if all the bus lines (depending on bus transfers) suggested by Google direction API is available in our Dublin Bus database
 				if(bus_number_first.upper() in list(map(itemgetter(0),list_all_bus_numbers)) and bus_number_second.upper() in list(map(itemgetter(0),list_all_bus_numbers))):
-					print("Inside bus_number_first and bus_number_second")
 					list_remove_duplicates = []
 					departure_stop ='%'+departure_stop+'%'
 					arrival_stop_transit ='%'+arrival_stop_transit+'%'
-
 					list_arrive_depart_stop_id=extract_correct_depart_arrival_stop_id(departure_stop,arrival_stop_transit,bus_number_first,headsign_first,lat1,long1,lat2,long2,result)
 					if(list_arrive_depart_stop_id!=0):
 						arrival_stop_id_first = list_arrive_depart_stop_id[0]
@@ -531,8 +462,15 @@ def findroutedetails(request):
 						print("Bus Number first is",bus_number_first)
 						remove_duplicates = extract_seq_numbers_bus_stops(headsign_first,bus_number_first,arrival_stop_id_first,departure_stop_id_first,number_of_stops_first,bus_at_departure_stop,bus_at_intermediate_transfer_stop,departure_date)
 						list_remove_duplicates.append(remove_duplicates)
+						departure_bus_seq = remove_duplicates[0][1]
+						arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
+						list_time_info = ml_model(bus_number_first,departure_bus_seq,arrival_bus_seq,arrival_stop_id_first,departure_stop_id_first,bus_at_departure_stop,bus_at_intermediate_transfer_stop,departure_date)
+						print("Result from Machine Learning Model is",list_time_info)
+						if(len(list_time_info)!=0):
+							list_with_alternate_routes[len(list_with_alternate_routes)-1][1] = list_time_info[0]
+							list_with_alternate_routes[len(list_with_alternate_routes)-1][8] = list_time_info[1]
 
-						#---------------------TRANSIT PART SECOND LEG INFO-------------------------------------------#	
+						#------------------------------TRANSIT PART SECOND LEG INFO-------------------------------------------#	
 						departure_stop_transit ='%'+departure_stop_transit+'%'
 						arrival_stop_final ='%'+arrival_stop_final+'%'
 						list_arrive_depart_stop_id=extract_correct_depart_arrival_stop_id(departure_stop_transit,arrival_stop_final,bus_number_second,headsign_second,lat3,long3,lat4,long4,result)
@@ -548,33 +486,23 @@ def findroutedetails(request):
 							#Add a check if remove_duplicates is [],pop the intermediate bus stops inserted for first leg
 							list_remove_duplicates.append(remove_duplicates)
 							list_intermediate_bus_stops_alternate_stops.append(list_remove_duplicates)
+							departure_bus_seq = remove_duplicates[0][1]
+							arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
+							list_time_info = ml_model(bus_number_second,departure_bus_seq,arrival_bus_seq,arrival_stop_id_second,departure_stop_id_second,bus_at_transit_departure_stop,bus_at_final_destination_stop,departure_date)
+							print("Result from Machine Learning Model is",list_time_info)
+							if(len(list_time_info)!=0):
+								list_with_alternate_routes[len(list_with_alternate_routes)-1][14] = list_time_info[0] #Time of arrival of the bus at intermediate transfer stop
+								list_with_alternate_routes[len(list_with_alternate_routes)-1][13] = list_time_info[1] #Time of arrival of the bus at final arrival/destination stop
+
+							
 						else:
-							#list_with_alternate_routes.pop() #No need to remove the direction data just pass
 							pass
 					else:
-						#list_with_alternate_routes.pop()
 						pass
 
-
-
-					
-
-
-
 				else:
-					#pass
 					list_intermediate_bus_stops_alternate_stops.append([])
 
-		'''
-
-		seq_numbers = list(seq_numbers)
-		if(len(seq_numbers)>2):
-			selected_seq_numbers = [0]*2
-			i = 0
-			if(i<len(seq_numbers) and seq_numbers[i]!=seq_numbers[i+1]):
-
-
-		'''
 		print("-----------------------------------------------------------------------------------------")
 		print("List of intermediate_bus_stops_with individual sequence numbers",list_intermediate_bus_stops_alternate_stops)
 		list_bus_lines = []
@@ -596,35 +524,33 @@ def findroutedetails(request):
 					list_bus_lines.append([])
 
 		print("List of bus lines from back end for user",list_bus_lines)
-		#args={}
-		#result = json.dumps(result)
-		#args['result']=result
-		#return HttpResponse(json.dumps({'result': result, 'list_with_alternate_routes': list_with_alternate_routes,'list_intermediate_bus_stops_alternate_stops':list_intermediate_bus_stops_alternate_stops,'list_bus_lines':list_bus_lines,'departure_date_time':departure_date_time}))
-		
+
 		return HttpResponse(json.dumps({'list_with_alternate_routes': list_with_alternate_routes,'list_intermediate_bus_stops_alternate_stops':list_intermediate_bus_stops_alternate_stops,'list_bus_lines':list_bus_lines,'departure_date_time':departure_date_time}))
 	else:
 		return HttpResponse("Error")
 
-
-	
-
-	#return HttpResponse(result)
-	#return render(request,'bus/real_time_route.html',args)
-
-
-
+@csrf_exempt
 def getweatherdetails(request):
+	'''
+	To fetch the current weather details from OpenWeather API and return the same to the corresponding Ajax call
+
+	'''
 
 	import requests, json, pymysql
 	url = "http://api.openweathermap.org/data/2.5/weather?id=7778677&APPID=a4822db1b5634c2e9e25209d1837cc69&units=metric"
 	r = requests.get(url)
 	weather_data = r.json() 
-	#print(weather_data.weather[0].main)
-	#print(weather_data.main.temp)
-	#print(weather_data)
 	return HttpResponse(json.dumps({'weather_data': weather_data}))
 
+@csrf_exempt
 def getnearestbusstops(request):
+	'''
+	To find and return  the seven closest bus stops (with all the information specific to a bus stop) to a user, fetching his current
+	location using Geocode. The number of bus stops returned is flexible and can be changed to any number by changing the numeric value
+	in argsort method. 
+	The function is triggered when the user clicks 'Find nearest bus stops' on the web page
+
+	'''
 	try:
 
 		from geopy.distance import great_circle
@@ -671,7 +597,13 @@ def getnearestbusstops(request):
 	except:
 		return("Error")
 
+@csrf_exempt
 def getalltouristplaces(request):
+	'''
+	To return list of all tourist places with their respective information (latitude, longitude, name and a breif history of the place).
+	This function is triggered when the user ticks the check-box related to 'Tourist Mode' on the web-page
+
+	'''
 	try:
 		sql_5 = "SELECT * FROM mydbservlet.tourist_places"
 		db = pymysql.connect(host="127.0.0.1", user="root", passwd="Ganesha-46", db="mydbservlet")
@@ -683,23 +615,4 @@ def getalltouristplaces(request):
 
 	except:
 		return("Error")
-
-
-
-
-def about(request):
-	return HttpResponse('<h1>BUS ABOUT</h1>')
-'''
-def search(request):
-    if 'q' in request.GET:
-        message = 'You searched for: %r' % request.GET['q']
-    else:
-        message = 'You submitted an empty form.'
-    return HttpResponse(message)
-
-    path('search/',views.search,name='bus-test-stop')
-'''
-#args = {}   args['result'] = result
-    
-
 
