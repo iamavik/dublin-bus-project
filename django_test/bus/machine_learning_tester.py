@@ -545,7 +545,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				predicted_bus_journey_time = int((predicted_arrival_time_2 - predicted_arrival_time_1)/60) #Divided by 60 to get the bus journey time in minutes
 				print("Estimated bus journey time in minutes",predicted_bus_journey_time)
 				list_time_info.append(predicted_bus_journey_time)
-				return predicted_bus_journey_time
+				return list_time_info
 
 			#If Day of the week is Friday
 			else:
