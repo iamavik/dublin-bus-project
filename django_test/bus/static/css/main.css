@@ -4,9 +4,17 @@
             }
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font: normal 90% Montserrat, Arial, sans-serif;
+        }
+
         #nav {
             width: 100%;
             height: 9.8%;
+            min-height: 66px;
             text-align: center;
             left: 0;
             top: 0;
@@ -124,11 +132,12 @@
         #depart-now-btn {
             margin-top: 4%;
             margin-right: 5%;
-            width: 35%;
+            width: 32%;
             background: #337AB7;
             color: white;
             padding: 5px 12px 5px 12px;
             border-radius:7px;
+            border:none;
         }
         
         #change-time-btn {
@@ -138,14 +147,16 @@
             color: white;
             padding: 5px 12px 5px 12px;
             border-radius:7px;
+            border:none;
         }
 
         #location-btn {
             margin-left: 5%;
-            font-size:22px;
+            font-size:1.5em;
             color:white;
             background: #337AB7;
             border-radius:50%;
+            border:none;
         }
         
         #date-time {
@@ -174,10 +185,12 @@
         #icon-nav {
             color: white;
             display: inline-block;
-            margin: 10px;
+            margin: 1em;
             width:100%;
             margin-left: 0;
+
         }
+
         
         .current{
             background: olivedrab;
@@ -188,27 +201,27 @@
 
 
         .glyphicon-search{
-            font-size: 20px;
+            font-size: 1.25em;
             color: white;
             padding: 0 3px 0 0;
             margin-left: 0;
-            font-size: 18px;
+            
         }
         
         .glyphicon-heart{
-            font-size: 20px;
+            font-size: 1.25em;
             color: white;
             padding: 0 3px 0 3px;
-            font-size: 18px;
+           
         }
         
         .glyphicon-globe{
-            font-size: 20px;
+            font-size: 1.25em;
             color: white;
             padding: 0 3px 0 3px;
-            font-size: 18px;
+       
         }
-        
+
         
 
         
@@ -220,19 +233,15 @@
             color: black;
             background-color: #F2F2F2;
             padding: 9px 20px;
-
             -webkit-border-radius: 50px;
             -moz-border-radius: 50px;
             border-radius: 50px;
-
             background-image: -webkit-linear-gradient(90deg, #DBDBDB, #F2F2F2);
             background-image: -moz-linear-gradient(90deg, #DBDBDB, #F2F2F2);
             background-image: -ms-linear-gradient(90deg, #DBDBDB, #F2F2F2);
             background-image: -o-linear-gradient(90deg, #DBDBDB, #F2F2F2);
             background-image: linear-gradient(90deg, #DBDBDB, #F2F2F2);
-
             border: 1px solid #B3B3B3;
-
             -webkit-box-shadow: inset 0 0 2px 1px white, 0 2px 5px rgba(0,0,0,0.15), inset 0 -17px 0 rgba(0,0,0,0.06);
             -moz-box-shadow: inset 0 0 2px 1px white, 0 2px 5px rgba(0,0,0,0.15), inset 0 -17px 0 rgba(0,0,0,0.06);
             box-shadow: inset 0 0 2px 1px white, 0 2px 5px rgba(0,0,0,0.15), inset 0 -17px 0 rgba(0,0,0,0.06);
@@ -331,12 +340,7 @@
             display: none;
         }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font: normal 90% Montserrat, Arial, sans-serif;
-        }
+        
 
 
         /*
@@ -514,4 +518,3 @@ LEVEL 3. SETTINGS
   --toggleBgColor: #9b59b6;
   --toggleSize: 50px;
 }
-
