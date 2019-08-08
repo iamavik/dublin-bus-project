@@ -1,1 +1,6 @@
-This folder is for the testing of different models using a section of the 46A data and the weather data
+This folder is for the testing of different models using a section of the 46A data and the weather data.
+
+
+df_46A.csv and weather_data_final.csv are all that are needed to produce the results
+
+There notebooks contain SQL quries that are there for understanding but will not run as it was a local database.
