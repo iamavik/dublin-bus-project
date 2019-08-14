@@ -5,7 +5,7 @@ import math
 CURRENT_DIR = os.path.dirname(__file__)
 
 #The purpose of ml_model is to invoke the correct model pickle file based on the input parameters received from views.py
-def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date):
+def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date,precip_prob,temp):
 	#Departure date needs to be passed as well from views.py
 	try:
 		import gc
@@ -101,7 +101,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -118,7 +118,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
 
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time in milliseconds to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -143,7 +143,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -160,7 +160,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
 
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -186,7 +186,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -202,7 +202,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -225,7 +225,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -241,7 +241,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -265,7 +265,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -281,7 +281,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -312,7 +312,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 			if(day_of_week=="Monday"):
 
 				print("Inside Else Part day_of_week:->",day_of_week)  #take this print statements out
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,1,0,0,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -328,7 +328,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,1,0,0,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -350,7 +350,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,1,0,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -367,7 +367,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
 
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,1,0,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -392,7 +392,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,1,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -408,7 +408,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,1,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -432,7 +432,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,1,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -448,7 +448,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,1,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -472,7 +472,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,1,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -488,7 +488,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,1,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -513,7 +513,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,0,1]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,0,1,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -529,7 +529,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,0,1]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,0,1,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
@@ -552,7 +552,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 
 				print("Inside Else Part day_of_week:->",day_of_week)
 
-				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,0,0]]
+				request_to_model = [[int(departure_bus_seq),int(extract_dept_stop_id),time_secs_1,0,0,0,0,0,0,precip_prob,temp]]
 				gc.disable()
 				model = cPickle.load(open(model_file,'rb'))
 				gc.enable()
@@ -568,7 +568,7 @@ def ml_model(bus_line,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departur
 				hour_mins = str(hour_part)+':'+mins_part
 				print("Predicted arrival time in XX:YY format to the departure bus stop is",hour_mins)
 				list_time_info.append(hour_mins)
-				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,0,0]]
+				request_to_model = [[int(arrival_bus_seq),int(extract_arr_stop_id),time_secs_2,0,0,0,0,0,0,precip_prob,temp]]
 				predicted_arrival_time_2 = int(model.predict(request_to_model))
 				print("Predicted arrival time to the arrival bus stop is",predicted_arrival_time_2)
 				predicted_arrival_time_2_hour_mins = predicted_arrival_time_2/3600 #To convert it in hour-mins format Time-> XX:YY
