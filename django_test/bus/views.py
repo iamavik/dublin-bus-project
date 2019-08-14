@@ -305,24 +305,67 @@ def findroutedetails(request):
 	print(destination)
 	print("Departure date is",departure_date)
 	print("Departure time  is",departure_time)
+	url = "http://api.openweathermap.org/data/2.5/weather?id=7778677&APPID=a4822db1b5634c2e9e25209d1837cc69&units=metric"
 	
-
-	if(departure_date=='' and departure_time==''):
+	import requests	
+	#if(departure_date==False and departure_time==False):
+	if(departure_date=='' and departure_time==''):  #This has been commented for Load Testing where it takes default value of date and time as False instead of ''
 		departure_date_time = unix_time()
-	elif(departure_date=='' and departure_time!=''):
+		url = "http://api.openweathermap.org/data/2.5/weather?id=7778677&APPID=a4822db1b5634c2e9e25209d1837cc69&units=metric"
+		r = requests.get(url)
+		weather_data = r.json() 
+		precip_prob = weather_data["weather"][0]["id"]
+		temp = weather_data["main"]["temp"]
+		print(weather_data["weather"][0]["id"])
+		print(weather_data["main"]["temp"])
+	#elif(departure_date==False and departure_time!=False): 
+	elif(departure_date=='' and departure_time!=''): #This has been commented for Load Testing where it takes default value of date and time as False instead of ''
 		x = str(datetime.now())
 		date_today = x[0:10].split('-')
 		time_hr_min = str(departure_time).split(':')
 		departure_date_time = unix_time(datetime(int(date_today[0]),int(date_today[1]),int(date_today[2]),int(time_hr_min[0])-1,int(time_hr_min[1])))
+		url = "http://api.openweathermap.org/data/2.5/weather?id=7778677&APPID=a4822db1b5634c2e9e25209d1837cc69&units=metric"
+		r = requests.get(url)
+		weather_data = r.json() 
+		precip_prob = weather_data["weather"][0]["id"]
+		temp = weather_data["main"]["temp"]
+		print(weather_data["weather"][0]["id"])
+		print(weather_data["main"]["temp"])
 
 	else:
 		date_requested = str(departure_date).split('-')
 		time_hr_min = str(departure_time).split(':')
 
 		departure_date_time = unix_time(datetime(int(date_requested[0]),int(date_requested[1]),int(date_requested[2]),int(time_hr_min[0])-1,int(time_hr_min[1])))
+		url = "http://api.openweathermap.org/data/2.5/forecast?id=7778677&APPID=a4822db1b5634c2e9e25209d1837cc69&units=metric"
+		r = requests.get(url)
+		departure_date_used_weather = departure_date+" "+"00:00:00"
+		# Parse the JSON
+		data = r.json()
+		for i in range(0,len(data['list'])):
+			date=data['list'][i]['dt_txt']
+			type(date)
+			if(departure_date_used_weather==date):
+				temp=data['list'][i]['main']['temp']
+				cloud=data['list'][i]['weather'][0]['main']
+				speed=data['list'][i]['wind']['speed']
+				precip_prob = data['list'][i]["weather"][0]["id"]
+				list_data=(temp,cloud,speed)
+				print(temp)
+				print(cloud)
+				print(speed)
+			else:
+				precip_prob = 0
+				temp = 0
+	if(precip_prob>=500 and precip_prob<=622):
+		precip_prob = 1
+	else:
+		precip_prob = 0
+        
+
 
 	# importing required libraries 
-	import requests	
+	
 	import googlemaps
 	
 
@@ -399,7 +442,7 @@ def findroutedetails(request):
 						list_intermediate_bus_stops_alternate_stops.append(remove_duplicates)
 						departure_bus_seq = remove_duplicates[0][1]
 						arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
-						list_time_info = ml_model(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date)
+						list_time_info = ml_model(bus_number,departure_bus_seq,arrival_bus_seq,arrival_stop_id,departure_stop_id,bus_at_departure_stop,bus_at_arrival_stop,departure_date,precip_prob,temp)
 						print("Result from Machine Learning Model is",list_time_info)
 						if(len(list_time_info)!=0):
 							list_with_alternate_routes[len(list_with_alternate_routes)-1][9] = list_time_info[0]   #Time of arrival of the bus at departure stop
@@ -464,7 +507,7 @@ def findroutedetails(request):
 						list_remove_duplicates.append(remove_duplicates)
 						departure_bus_seq = remove_duplicates[0][1]
 						arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
-						list_time_info = ml_model(bus_number_first,departure_bus_seq,arrival_bus_seq,arrival_stop_id_first,departure_stop_id_first,bus_at_departure_stop,bus_at_intermediate_transfer_stop,departure_date)
+						list_time_info = ml_model(bus_number_first,departure_bus_seq,arrival_bus_seq,arrival_stop_id_first,departure_stop_id_first,bus_at_departure_stop,bus_at_intermediate_transfer_stop,departure_date,precip_prob,temp)
 						print("Result from Machine Learning Model is",list_time_info)
 						if(len(list_time_info)!=0):
 							list_with_alternate_routes[len(list_with_alternate_routes)-1][1] = list_time_info[0]
@@ -488,7 +531,7 @@ def findroutedetails(request):
 							list_intermediate_bus_stops_alternate_stops.append(list_remove_duplicates)
 							departure_bus_seq = remove_duplicates[0][1]
 							arrival_bus_seq = remove_duplicates[len(remove_duplicates)-1][1]
-							list_time_info = ml_model(bus_number_second,departure_bus_seq,arrival_bus_seq,arrival_stop_id_second,departure_stop_id_second,bus_at_transit_departure_stop,bus_at_final_destination_stop,departure_date)
+							list_time_info = ml_model(bus_number_second,departure_bus_seq,arrival_bus_seq,arrival_stop_id_second,departure_stop_id_second,bus_at_transit_departure_stop,bus_at_final_destination_stop,departure_date,precip_prob,temp)
 							print("Result from Machine Learning Model is",list_time_info)
 							if(len(list_time_info)!=0):
 								list_with_alternate_routes[len(list_with_alternate_routes)-1][14] = list_time_info[0] #Time of arrival of the bus at intermediate transfer stop
@@ -529,10 +572,11 @@ def findroutedetails(request):
 	else:
 		return HttpResponse("Error")
 
+'''
 @csrf_exempt
 def getweatherdetails(request):
 	'''
-	To fetch the current weather details from OpenWeather API and return the same to the corresponding Ajax call
+	#To fetch the current weather details from OpenWeather API and return the same to the corresponding Ajax call
 
 	'''
 
@@ -541,6 +585,8 @@ def getweatherdetails(request):
 	r = requests.get(url)
 	weather_data = r.json() 
 	return HttpResponse(json.dumps({'weather_data': weather_data}))
+
+'''
 
 @csrf_exempt
 def getnearestbusstops(request):
