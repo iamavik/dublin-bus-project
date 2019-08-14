@@ -1,5 +1,4 @@
 
-
 function show_collection() {
   document.getElementById('input-bar').style.display = 'none';
   document.getElementById('route').style.display = 'none';
@@ -18,6 +17,15 @@ function show_search() {
 
 function show_route() {
   document.getElementById('route').style.display = 'block';
+}
+function myFunction()
+{
+  document.getElementById("loader").style.display = "block";
+  myVar = setTimeout(showPage, 18000);
+}
+function showPage() {
+  document.getElementById("loader").style.display = "none";
+
 }
 
 function show_tourist() {
@@ -75,6 +83,8 @@ function get_weather() {
   });
 }
 
+
+
 function myMap()
 {
 var myCenter = {lat: 53.349605, lng:-6.264175 };  
@@ -97,6 +107,8 @@ infowindow = new google.maps.InfoWindow({
         }); 
 
 directionsDisplay.setMap(map);
+//myFunction();
+//document.getElementById("loader").style.display = "block";
 var flag = 0;
 var onChangeHandler = function() {
   flag=1;
@@ -238,11 +250,17 @@ var list = list_intermediate_bus_stops[data2];
 console.log("List is");
 console.log(list);
 document.getElementById("test").innerHTML=data;
+console.log("direction data length is",direction_data.length);
+console.log(direction_data);
+/*
 if(direction_data.length==data)
 {
   data = direction_data.length-1;
 }
-if(direction_data[data].length==18) //This is to diplay single bus journey. The length of it is still 18. For bus transfer,length has increased by 1
+*/
+console.log("Data Now is",data);
+if(direction_data[data2].length==18) //This is to diplay single bus journey. The length of it is still 18. For bus transfer,length has increased by 1
+//Note: in line 262 it was direction_data[data] previously now it has been changed
 {
   deleteMarkers();
   for(var i =1;i<list.length-1;i++)
@@ -538,40 +556,49 @@ function test_func()
 {
 var source = document.getElementById("searchTextField").value;
 var dest  = document.getElementById("searchTextField2").value;
-var selected_date = document.getElementById("mydate").value;
-var selected_time = document.getElementById("mytime").value;
-var depart_time,datetime_UTC,hr_mins,hr,mins,hr_mins,mins_ms;
-var origin = source;
-var destination = dest;
-var departure_date = selected_date;
-var departure_time = selected_time;
-$.ajax({
-  type: "POST",
-  url:  '/my-ajax-test/' ,
-  data: { csrfmiddlewaretoken: '{{ csrf_token }}', origin: origin, destination:destination,departure_date: departure_date,departure_time: departure_time },
-  success: function(response){
-    console.log(response);
-    //var myObj = JSON.parse("response".replace(/&quot;/g,"\""));
-    if(response=="Error")
-    {
-      alert("Currently no nearby bus stops seems to be operating...kindly try again in some time")
-    }
-    else
-    {
-      var myObj =  JSON.parse(response);
-      var direction_data = myObj.list_with_alternate_routes;
-      var list_intermediate_bus_stops = myObj.list_intermediate_bus_stops_alternate_stops;
-      var list_bus_lines =  myObj.list_bus_lines;
-      var departure_date_time = parseInt(myObj.departure_date_time);
-      console.log(direction_data);
-      console.log(list_intermediate_bus_stops);
-      console.log(list_bus_lines);
-      change_map(list_intermediate_bus_stops,list_bus_lines,direction_data,departure_date_time);
-    }
-  }
-});
-return false;
+//console.log(typeOf(source));
+if(source==null || source==""|| dest==null || dest=="")
+{
+  alert("Both source and destination is required");
 }
+else
+{
+  var selected_date = document.getElementById("mydate").value;
+  var selected_time = document.getElementById("mytime").value;
+  var depart_time,datetime_UTC,hr_mins,hr,mins,hr_mins,mins_ms;
+  var origin = source;
+  var destination = dest;
+  var departure_date = selected_date;
+  var departure_time = selected_time;
+  $.ajax({
+    type: "POST",
+    url:  '/my-ajax-test/' ,
+    data: { csrfmiddlewaretoken: '{{ csrf_token }}', origin: origin, destination:destination,departure_date: departure_date,departure_time: departure_time },
+    success: function(response){
+      console.log(response);
+      //var myObj = JSON.parse("response".replace(/&quot;/g,"\""));
+      if(response=="Error")
+      {
+        alert("Currently no nearby bus stops seems to be operating...kindly try again in some time")
+      }
+      else
+      {
+        var myObj =  JSON.parse(response);
+        var direction_data = myObj.list_with_alternate_routes;
+        var list_intermediate_bus_stops = myObj.list_intermediate_bus_stops_alternate_stops;
+        var list_bus_lines =  myObj.list_bus_lines;
+        var departure_date_time = parseInt(myObj.departure_date_time);
+        console.log(direction_data);
+        console.log(list_intermediate_bus_stops);
+        console.log(list_bus_lines);
+        change_map(list_intermediate_bus_stops,list_bus_lines,direction_data,departure_date_time);
+      }
+    }
+  });
+  return false;
+}
+}
+
 var map, infoWindow;
 function show_closest_bus_stops(closest_3_stops,closest_3_stops_bus_info,current_latitude,current_longitude) {
 var myCenter = {lat: 53.349605, lng:-6.264175 };  
@@ -918,6 +945,7 @@ success: function(response){
 // Fetching data directly from the OpenWeather API after every 5000 seconds to auto - update the weather related deatils
 var myVar=setInterval(myTimer,100000);
 //Commenting it to prevent api calls to open weather, later uncomment it
+
 /*
 function myTimer()
 {
@@ -931,4 +959,5 @@ $.ajax({
 });
 }
 */
+
 google.maps.event.addDomListener(window, 'load', initialize);
