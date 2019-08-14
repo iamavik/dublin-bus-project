@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
+    <style>
+/* Center the loader */
+
+</style>
 
     {% load static %}
 
@@ -55,16 +59,16 @@
             <span class="input-group-addon" id="sizing-addon2"><span class="glyphicon glyphicon-home"
                                                                      aria-hidden="true"></span></span>
             <input id="searchTextField" type="text" class="form-control" placeholder="Enter starting point"
-                   autocomplete="on" aria-describedby="sizing-addon2" onclick="initialize()">
+                   autocomplete="on" aria-describedby="sizing-addon2" onclick="initialize()" required>
         </div>
 
-        <br>
+        <span id="exchange-icon" class="glyphicon glyphicon-sort" aria-hidden="true"></span>
 
         <div class="input-group">
             <span class="input-group-addon" id="sizing-addon2"><span class="glyphicon glyphicon-glass"
                                                                      aria-hidden="true"></span></span>
             <input id="searchTextField2" type="text" class="form-control" placeholder="Enter ending point"
-                   autocomplete="on" runat="server" onclick="initialize2()" aria-describedby="sizing-addon2">
+                   autocomplete="on" runat="server" onclick="initialize2()" aria-describedby="sizing-addon2" required>
         </div>
 
         <div id="date-time">
@@ -80,13 +84,10 @@
             </div>
         </div>
 
-        <button id="depart-now-btn" type="button" onclick=test_func();show_route()>Show Trip</button>
+        <button id="depart-now-btn" type="button" onclick=test_func();show_route();myFunction();>Depart Now</button>
         <button id="change-time-btn" type="button" onclick="savetrip()">Save Route</button>
         <button id="location-btn" title="Find nearest bus stops" onclick="getLocation()"><i class="fa fa-location-arrow"></i></button>
-
-        <!-- <img src="https://img.icons8.com/ios-filled/50/000000/bus.png"> -->
-        <!-- <img src="../static/images/bus-stop.png"/> -->
-
+        <!-- <button onclick="savetrip()"> Save a Trip as Favourite</button> -->
 
         <!-- <div id="date-time">
                     <div class="input-group date form_datetime" data-date="1979-09-16T05:25:07Z" data-date-format="dd MM yyyy - HH:ii p" data-link-field="dtp_input1">
@@ -94,12 +95,7 @@
                     <span class="input-group-addon"><span class="glyphicon glyphicon-remove"></span></span>
                     <span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
                     </div>
-
-
-
-
                     <button class="btn btn-primary btn-block" type="button" onclick="return test_func();"/>Go</button>
-
                 </div> -->
 
     </div>
@@ -189,7 +185,7 @@
     <p id="currentTemp"></p>
     <p id="windSpeed"></p>
 </div>
-
+<div id="loader" class="initial-hide_spinner"></div>
 <!-- <div id="show-stops">
     <span class="button" >Find Nearest Bus Stops</span>
 </div>
@@ -197,11 +193,11 @@
 <p id="test"></p>
 
 
-<script type="text/javascript" src="{% static 'js/main.js' %}"></script> <!--Load external JS file-->
+<script type="text/javascript" src="{% static 'bus/main.js' %}"></script> <!--Load external JS file-->
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBi-bH5_sngxNibrgygRZDhmAv2fK5hzus&callback=myMap&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCM9nXFgqm8JbVlEYRAiPv6WTUFGSvyTBU&callback=myMap&libraries=places"></script>
 
 
 </body>
